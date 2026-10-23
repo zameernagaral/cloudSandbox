@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cloud-sandbox-host-agent"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
+    "websockets>=12.0",
+    "httpx>=0.27.0",
+    "structlog>=24.1.0",
+    "anyio>=4.3.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "tenacity>=8.3.0",
+    "psutil>=5.9.0",
+]
+
+[project.scripts]
+host-agent = "agent.main:main"
