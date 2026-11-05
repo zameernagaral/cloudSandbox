@@ -1,12 +1,12 @@
 import React from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { Terminal, Settings as SettingsIcon, LogOut, LayoutDashboard } from 'lucide-react'
+import { Terminal, Settings as SettingsIcon, LogOut, LayoutDashboard, Zap, Sparkles } from 'lucide-react'
 import { useAuthStore } from '../../store/auth'
 
 export function AppLayout() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const { user, clearAuth } = useAuthStore()
+  const { user, clearAuth, demoMode, setDemoMode } = useAuthStore()
 
   const handleLogout = () => {
     clearAuth()
@@ -26,33 +26,76 @@ export function AppLayout() {
           </Link>
 
           <div className="flex items-center gap-1">
-            <Link 
-              to="/dashboard" 
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${pathname === '/dashboard' ? 'bg-bg text-text' : 'text-text-dim hover:text-text hover:bg-bg/50'}`}
+            <Link
+              to="/dashboard"
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                pathname === '/dashboard' ? 'bg-bg text-text' : 'text-text-dim hover:text-text hover:bg-bg/50'
+              }`}
             >
-              <div className="flex items-center gap-2"><LayoutDashboard className="w-4 h-4" /> Sandboxes</div>
+              <div className="flex items-center gap-2">
+                <LayoutDashboard className="w-4 h-4" /> Sandboxes
+              </div>
             </Link>
-            <Link 
-              to="/settings" 
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${pathname === '/settings' ? 'bg-bg text-text' : 'text-text-dim hover:text-text hover:bg-bg/50'}`}
+
+            <Link
+              to="/demo"
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                pathname === '/demo'
+                  ? 'bg-frozen/15 text-frozen border border-frozen/30'
+                  : 'text-frozen/80 hover:text-frozen hover:bg-frozen/10'
+              }`}
             >
-              <div className="flex items-center gap-2"><SettingsIcon className="w-4 h-4" /> Settings</div>
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-frozen" /> Live Killswitch Demo
+              </div>
+            </Link>
+
+            <Link
+              to="/settings"
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                pathname === '/settings' ? 'bg-bg text-text' : 'text-text-dim hover:text-text hover:bg-bg/50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <SettingsIcon className="w-4 h-4" /> Settings
+              </div>
             </Link>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Demo Mode Toggle Badge */}
+          <button
+            onClick={() => setDemoMode(!demoMode)}
+            className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+              demoMode
+                ? 'bg-accent/15 border-accent/40 text-accent hover:bg-accent/25'
+                : 'bg-surface border-border text-text-dim hover:text-text'
+            }`}
+            title="Click to toggle between Presentation Demo Mode and Live API"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            {demoMode ? 'Demo Mode Active' : 'Live API Mode'}
+          </button>
+
           <div className="flex items-center gap-3 pr-4 border-r border-border">
             {user?.avatar_url ? (
               <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full border border-border" />
             ) : (
               <div className="w-7 h-7 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-xs font-semibold text-accent">
-                {user?.email[0].toUpperCase()}
+                {user?.email ? user.email[0].toUpperCase() : 'U'}
               </div>
             )}
-            <div className="text-sm font-medium truncate max-w-[120px]">{user?.display_name ?? user?.email}</div>
+            <div className="text-sm font-medium truncate max-w-[140px]">
+              {user?.display_name ?? user?.email ?? 'Demo User'}
+            </div>
           </div>
-          <button onClick={handleLogout} className="p-2 text-text-dim hover:text-danger hover:bg-danger/10 rounded-lg transition-colors">
+
+          <button
+            onClick={handleLogout}
+            title="Sign out"
+            className="p-2 text-text-dim hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
+          >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
