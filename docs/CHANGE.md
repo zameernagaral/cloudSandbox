@@ -1,54 +1,47 @@
-# Change Specification: Hero Full-Bleed Ambient Background (Alternative B)
+# Change Specification: Purge Orange/Gradients for Pure Industrial Slate Look
 
 ## 1. Goal (One Sentence)
-Convert the landing page hero from a split 2-column card layout to a full-bleed ambient background with centered text and a clean horizontal telemetry bar (Alternative B in `docs/WIREFRAMES.md`), removing the standalone right-hand chamber block and eliminating glowing AI-slop gradients.
+Refine the design tokens and component styling to eliminate orange/amber buttons, purple accents, and glowing gradients across the application, establishing an authentic, high-contrast industrial monochrome and slate aesthetic.
 
 ## 2. Classification
-**HERO / LAYOUT of one section** — implementing Alternative B from `docs/WIREFRAMES.md` (Full-Bleed Ambient Horizon with Centered Telemetry Deck) for the hero section.
+**LOOK** — modifying color tokens in `docs/TOKENS.md`, `dashboard/src/styles/tokens.css`, `dashboard/tailwind.config.js`, `dashboard/src/index.css`, and icon accents in `dashboard/src/pages/Landing.tsx`.
 
-## 3. Split Notice
-The user request contained multiple changes ("remove that block only add hero as a background **and** change the styling no purple, or orange no gradient"):
-- **Change 1 (Current):** Hero full-bleed background layout, removing the 2-column block, with clean monochrome styling on the hero.
-- **Change 2 (Next):** Global token & style audit to purge purple/orange accents and gradients across all secondary landing sections and cards.
+## 3. Documentation Status
+- `docs/TOKENS.md`: Updated to deprecate `--color-signal-hazard` as an omnipresent orange accent, replacing primary interactive surfaces with high-contrast chalk white (`#F1F5F9`) and tactile slate (`#1E2536`), with `--color-signal-breach` (`#EF4444`) strictly reserved for freeze/error indicators.
+- Removed glowing drop-shadows (`--shadow-glow-amber`) in favor of crisp 1px hairline rules (`--color-rule-frame` / `#2B3448`).
 
-## 4. Documentation Status
-- `docs/WIREFRAMES.md`: Authoritative specification for Section 1 Alternative B.
-- `docs/HERO.md`: Updated Section 4 to reflect full-bleed background mode.
-- `docs/TOKENS.md`: Design tokens referenced for crisp 1px borders and high-contrast typography.
-
-## 5. File Boundaries
+## 4. File Boundaries
 ### Exact Files Allowed to Edit:
-- `docs/HERO.md` (documenting Alternative B active lifecycle)
-- `dashboard/src/components/hero/HeroChamber.tsx` (refactored to serve as full-bleed background and horizontal telemetry bar)
-- `dashboard/src/pages/Landing.tsx` (restructuring hero section to centered layout over full-bleed background)
+- `docs/TOKENS.md`
+- `dashboard/src/styles/tokens.css`
+- `dashboard/tailwind.config.js`
+- `dashboard/src/index.css`
+- `dashboard/src/pages/Landing.tsx` (replacing orange `text-signal-hazard` icons with clean slate/white accents)
 
 ### Files That Must NOT Be Touched:
-- `control-plane/**` (all backend Python files, database, auth, APIs)
+- `control-plane/**` (all backend Python files, database, APIs)
 - `dashboard/src/api/**`
 - `dashboard/src/pages/Auth.tsx`
 - `dashboard/src/pages/Dashboard.tsx`
 - `dashboard/src/pages/RogueAgentDemo.tsx`
 - `dashboard/src/pages/SandboxDetail.tsx`
-- `docs/SECURITY.md`, `docs/COPY.md`, `docs/TOKENS.md`
+- `docs/SECURITY.md`, `docs/COPY.md`, `docs/HERO.md`
 
-## 6. Blast Radius
-- Restricted exclusively to the hero section (`<section id="hero">`) inside `dashboard/src/pages/Landing.tsx` and its child component `HeroChamber.tsx`.
-- No route changes, no backend impact, no shared state changes.
+## 5. Blast Radius
+- Global UI buttons (`.btn-primary`, `.btn-secondary`), input focus outlines, and cards on the landing page.
+- Typography and contrast ratios improve to WCAG AAA across all viewport sizes.
 
-## 7. Failure States & Edge Cases
-1. **Reduced Motion (`prefers-reduced-motion: reduce`):** Background video does not attach or autoplay; high-contrast static poster remains as full-bleed background.
-2. **Save-Data / Slow Connections:** Video attachment suppressed; static poster image handles the background.
-3. **Contrast / Legibility:** Background has a subtle dark obsidian scrim (`rgba(11, 13, 19, 0.78)`) ensuring WCAG AAA legibility for white text without requiring diffuse colored drop-shadows or gradients.
-4. **Emergency Stop Button:** Clicking "Pull to freeze" halts background video playback and marks telemetry status as `[FROZEN]`.
-5. **Scroll Off-Screen:** `IntersectionObserver` halts video execution when the hero is out of view (0% CPU/GPU).
+## 6. Failure States & Edge Cases
+1. **Button Contrast:** Primary buttons transition from orange (`#F59E0B`) to chalk white (`#F1F5F9`) with dark ink text (`#0B0D13`), yielding a contrast ratio of >17:1 against dark backgrounds.
+2. **Focus Visibility:** Replaced orange focus rings with crisp 2px chalk white / slate focus rings (`focus:ring-white/40`) to maintain clear keyboard accessibility.
+3. **Breach / Error Visibility:** Emergency killswitch and error badges retain containment red (`#EF4444`) for critical safety feedback.
 
-## 8. Acceptance Tests
-1. Hero right-column block card is completely removed.
-2. Video/poster spans the entire hero section background edge-to-edge with no purple or orange glowing boxes.
-3. Headline, value proposition, CTAs, and horizontal telemetry bar are centered and legible.
-4. Emergency stop latch freezes background playback and updates state to "Frozen".
-5. TypeScript check (`npm run type-check`) and production build (`npm run build`) pass with 0 errors.
-6. Playwright automated check verifies rendering and interaction.
+## 7. Acceptance Tests
+1. Zero instances of orange buttons or purple flares on the landing page.
+2. Header navigation mark, architecture cards, and buttons render in crisp slate/white industrial computing style.
+3. Keyboard navigation focus rings remain visible and accessible.
+4. `npm run type-check` and `npm run build` pass with 0 errors.
+5. Automated test suite passes (`npm test`).
 
-## 9. Rollback Procedure
-Run `git checkout dev -- dashboard/src/components/hero/HeroChamber.tsx dashboard/src/pages/Landing.tsx docs/HERO.md`.
+## 8. Rollback Procedure
+Run `git checkout dev -- docs/TOKENS.md dashboard/src/styles/tokens.css dashboard/tailwind.config.js dashboard/src/index.css dashboard/src/pages/Landing.tsx`.
