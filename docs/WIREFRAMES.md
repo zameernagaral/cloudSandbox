@@ -117,7 +117,38 @@ Aesthetic: Industrial containment bulkhead — tactile mechanical framing, struc
 
 ---
 
-## 2. Core Section Wireframes (Technical Proof & Quick Start)
+### Scroll-Driven Transition: Bottom-Right Hero Terminal Expanding into `/demo` Slot
+* **Concept:** At `scrollY = 0`, the single terminal window starts small (`260px × 168px`, `scale ≈ 0.36`) in the bottom-right corner of the hero (`#hero-terminal-anchor`), completely covering the bottom-right watermark in the background video while leaving the central 3D cube unobstructed.
+* **Scroll FLIP Animation:** As the user scrolls down toward `#demo`, the terminal smoothly interpolates its position (`translate3d`) and scale (`scale` -> `1.0`) until it lands directly inside the 7-column right-hand slot of the Rogue AI Agent Killswitch Demo section, where all other `/demo` controls and cards are already seated.
+
+#### Scroll Expansion Wireframe
+```
+[ HERO VIEWPORT (scrollY = 0) ]
++----------------------------------------------------------------------------------------------------+
+|                               HARDWARE-ISOLATED EXECUTION FOR AI AGENTS                            |
+|                                   [ Test run rogue agent ] [ Read docs ]                           |
+|                                                                        +-------------------------+ |
+|                                                                        | [● ● ●] firecracker://  | |
+|                                                                        | (Covers bottom-right    | |
+|                                                                        |  video watermark)       | |
+|                                                                        +-------------------------+ |
++----------------------------------------------------------------------------------------------------+
+                                               │
+                                               ▼  (SCROLL-DRIVEN FLIP: GROWS & MOVES TO SLOT)
+[ EXPANDED SIMULATOR STAGE: #demo ]
++----------------------------------------------------------------------------------------------------+
+| Rogue AI Agent Killswitch Demo                               [Firecracker v1.7 | Linux 5.10 | ~42ms]
+| +-------------------------------------------+  +-------------------------------------------------+ |
+| | 1. CONFIGURE AGENT SCENARIO               |  | [● ● ●] firecracker://sandbox-vm-demo (vsock)   | |
+| | [Infinite Loop] [Token Surge] [Safe Task] |  | 00:00.118 MicroVM booted via vsock:cid 3:1024   | |
+| | Cost Cap: [$0.010 USD] [====O===========] |  | 00:00.412 [GATEWAY] Metering prompt tokens...   | |
+| | [ > START MICROVM & RUN AGENT ]           |  | 00:01.021 [KILLSWITCH] Freeze tripped: $0.0102  | |
+| +-------------------------------------------+  |                                                 | |
+| | 2. LIVE TELEMETRY & MICROVM STATE         |  | Proxy: 127.0.0.1:8080               State: IDLE | |
+| | Tokens: 0 | Calls: 0 | CPU: 0% | RAM: 0MB |  +-------------------------------------------------+ |
+| +-------------------------------------------+  | [1. Isolation] [2. Key Proxy] [3. Killswitch]   | |
++----------------------------------------------------------------------------------------------------+
+```
 
 ### Section 2: Technical Architecture & Defense-in-Depth
 * **Desktop (1440px):** 3-column grid (`grid-cols-3 gap-6`), 1px chisel framing (`border-rule-frame`), slate bulkheads (`bg-surface-bulkhead`).

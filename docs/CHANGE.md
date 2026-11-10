@@ -1,47 +1,52 @@
-# Change Specification: Purge Orange/Gradients for Pure Industrial Slate Look
+# Change Specification: Integrate Interactive Demo into Home Page with Scroll-Expanding Terminal
 
 ## 1. Goal (One Sentence)
-Refine the design tokens and component styling to eliminate orange/amber buttons, purple accents, and glowing gradients across the application, establishing an authentic, high-contrast industrial monochrome and slate aesthetic.
+Embed the interactive Rogue Agent Simulator directly into the home page using a scroll-driven expanding terminal transition from the hero background, and redirect the standalone `/demo` route to the home page demo section.
 
 ## 2. Classification
-**LOOK** — modifying color tokens in `docs/TOKENS.md`, `dashboard/src/styles/tokens.css`, `dashboard/tailwind.config.js`, `dashboard/src/index.css`, and icon accents in `dashboard/src/pages/Landing.tsx`.
+**FRONTEND FEATURE or FLOW** — combining the hero ambient stage with the interactive simulator flow on the landing page, and redirecting `/demo` to `/#demo`.
 
 ## 3. Documentation Status
-- `docs/TOKENS.md`: Updated to deprecate `--color-signal-hazard` as an omnipresent orange accent, replacing primary interactive surfaces with high-contrast chalk white (`#F1F5F9`) and tactile slate (`#1E2536`), with `--color-signal-breach` (`#EF4444`) strictly reserved for freeze/error indicators.
-- Removed glowing drop-shadows (`--shadow-glow-amber`) in favor of crisp 1px hairline rules (`--color-rule-frame` / `#2B3448`).
+- `docs/WIREFRAMES.md`: Updated Section 1 to document the scroll-expanding terminal stage transitioning from the hero into the full interactive simulation console.
+- `docs/COPY.md`: UI copy for scenario controls, telemetry metrics, and terminal logs aligned with existing specifications.
+- `docs/TOKENS.md`: Design tokens for industrial slate surfaces and crisp 1px borders applied throughout.
 
 ## 4. File Boundaries
 ### Exact Files Allowed to Edit:
-- `docs/TOKENS.md`
-- `dashboard/src/styles/tokens.css`
-- `dashboard/tailwind.config.js`
-- `dashboard/src/index.css`
-- `dashboard/src/pages/Landing.tsx` (replacing orange `text-signal-hazard` icons with clean slate/white accents)
+- `docs/WIREFRAMES.md`
+- `dashboard/src/App.tsx` (redirect `/demo` route to `/#demo` on home page)
+- `dashboard/src/components/demo/InteractiveSimulator.tsx` (modular simulator component extracted and styled cleanly)
+- `dashboard/src/components/hero/HeroChamber.tsx` (scroll-connected terminal preview layer)
+- `dashboard/src/pages/Landing.tsx` (integrating scroll-driven expanding terminal stage and simulator section)
+- `dashboard/src/pages/RogueAgentDemo.tsx` (deprecated or re-exporting redirect)
 
 ### Files That Must NOT Be Touched:
-- `control-plane/**` (all backend Python files, database, APIs)
+- `control-plane/**` (all backend Python files, database, auth, APIs)
 - `dashboard/src/api/**`
 - `dashboard/src/pages/Auth.tsx`
 - `dashboard/src/pages/Dashboard.tsx`
-- `dashboard/src/pages/RogueAgentDemo.tsx`
 - `dashboard/src/pages/SandboxDetail.tsx`
-- `docs/SECURITY.md`, `docs/COPY.md`, `docs/HERO.md`
+- `dashboard/src/pages/Settings.tsx`
+- `docs/SECURITY.md`, `docs/TOKENS.md`
 
 ## 5. Blast Radius
-- Global UI buttons (`.btn-primary`, `.btn-secondary`), input focus outlines, and cards on the landing page.
-- Typography and contrast ratios improve to WCAG AAA across all viewport sizes.
+- Links previously directing to `/demo` (`Launch demo` button in header, `Test run rogue agent` CTA in hero, footer links) now anchor directly to `/#demo` on the home page.
+- Home page bundle includes the interactive simulation logic previously loaded on `/demo`.
+- No backend API contracts or authenticated routes are altered.
 
 ## 6. Failure States & Edge Cases
-1. **Button Contrast:** Primary buttons transition from orange (`#F59E0B`) to chalk white (`#F1F5F9`) with dark ink text (`#0B0D13`), yielding a contrast ratio of >17:1 against dark backgrounds.
-2. **Focus Visibility:** Replaced orange focus rings with crisp 2px chalk white / slate focus rings (`focus:ring-white/40`) to maintain clear keyboard accessibility.
-3. **Breach / Error Visibility:** Emergency killswitch and error badges retain containment red (`#EF4444`) for critical safety feedback.
+1. **Reduced Motion (`prefers-reduced-motion: reduce`):** Scroll scaling transforms are disabled; the terminal renders at full 100% static width without scale transitions.
+2. **Mobile Viewports (<768px):** Terminal scales responsively to fit 100% viewport width with horizontal overflow containment on log lines.
+3. **Scroll Interpolation:** Scale smoothly clamps between initial hero preview (0.85 scale / compact view) and full deck (1.0 scale) based on scroll offset, preventing visual jitter.
+4. **Direct URL Access (`/demo`):** Automatically redirects to `/#demo` on the home page and smooth-scrolls to the active simulator.
 
 ## 7. Acceptance Tests
-1. Zero instances of orange buttons or purple flares on the landing page.
-2. Header navigation mark, architecture cards, and buttons render in crisp slate/white industrial computing style.
-3. Keyboard navigation focus rings remain visible and accessible.
-4. `npm run type-check` and `npm run build` pass with 0 errors.
-5. Automated test suite passes (`npm test`).
+1. Navigating to `/demo` redirects cleanly to the home page (`/` or `/#demo`).
+2. Terminal console begins in the hero viewport in front of the ambient background.
+3. Scrolling down dynamically enlarges the terminal to full width, revealing the complete interactive simulator (scenario selection, cost cap slider, microVM controls, telemetry meters, and live stdout).
+4. All existing landing sections (Header, Architecture Proof, Quick Start, Footer) remain rendered in proper order.
+5. `npm run type-check` and `npm run build` pass with 0 errors.
+6. `npm test` unit tests pass.
 
 ## 8. Rollback Procedure
-Run `git checkout dev -- docs/TOKENS.md dashboard/src/styles/tokens.css dashboard/tailwind.config.js dashboard/src/index.css dashboard/src/pages/Landing.tsx`.
+Run `git checkout dev -- dashboard/ docs/WIREFRAMES.md`.
