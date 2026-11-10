@@ -1,57 +1,54 @@
-# Change Specification: Integrate Real Hero Chamber into Landing Page
+# Change Specification: Hero Full-Bleed Ambient Background (Alternative B)
 
 ## 1. Goal (One Sentence)
-Replace the static hero placeholder in `dashboard/src/pages/Landing.tsx` with the real, interactive Containment Chamber component built in `/hero` (ambient video loop, instant static LCP poster fallback, real HTML telemetry matrix, and emergency killswitch latch).
+Convert the landing page hero from a split 2-column card layout to a full-bleed ambient background with centered text and a clean horizontal telemetry bar (Alternative B in `docs/WIREFRAMES.md`), removing the standalone right-hand chamber block and eliminating glowing AI-slop gradients.
 
 ## 2. Classification
-**FRONTEND FEATURE** — integrating the verified hero technique from `docs/HERO.md` and `docs/WIREFRAMES.md` into the primary React application.
+**HERO / LAYOUT of one section** — implementing Alternative B from `docs/WIREFRAMES.md` (Full-Bleed Ambient Horizon with Centered Telemetry Deck) for the hero section.
 
-## 3. Documentation Status
-- `docs/HERO.md`: Authoritative specification for the chamber behavior, assets, and fallback rules.
-- `docs/WIREFRAMES.md`: Authoritative specification for Section 1 (Alternative A: 5-col statement + 7-col chamber deck).
-- `docs/COPY.md`: Verified UI copy for telemetry metrics, status pills, and killswitch labels.
-- `docs/TOKENS.md`: Color tokens (`--color-surface-bulkhead`, `--color-rule-frame`, `--color-signal-hazard`, etc.).
+## 3. Split Notice
+The user request contained multiple changes ("remove that block only add hero as a background **and** change the styling no purple, or orange no gradient"):
+- **Change 1 (Current):** Hero full-bleed background layout, removing the 2-column block, with clean monochrome styling on the hero.
+- **Change 2 (Next):** Global token & style audit to purge purple/orange accents and gradients across all secondary landing sections and cards.
 
-## 4. File Boundaries
+## 4. Documentation Status
+- `docs/WIREFRAMES.md`: Authoritative specification for Section 1 Alternative B.
+- `docs/HERO.md`: Updated Section 4 to reflect full-bleed background mode.
+- `docs/TOKENS.md`: Design tokens referenced for crisp 1px borders and high-contrast typography.
+
+## 5. File Boundaries
 ### Exact Files Allowed to Edit:
-- `dashboard/src/components/hero/HeroChamber.tsx` (new component encapsulating the chamber)
-- `dashboard/src/pages/Landing.tsx` (replacing the placeholder deck with `<HeroChamber />`)
-- `dashboard/public/hero/*` (copying the 4 verified hero media assets from `web/public/hero/`)
-- `dashboard/index.html` (adding `<link rel="preload">` for `hero-poster.png`)
+- `docs/HERO.md` (documenting Alternative B active lifecycle)
+- `dashboard/src/components/hero/HeroChamber.tsx` (refactored to serve as full-bleed background and horizontal telemetry bar)
+- `dashboard/src/pages/Landing.tsx` (restructuring hero section to centered layout over full-bleed background)
 
 ### Files That Must NOT Be Touched:
-- `control-plane/**` (all backend Python files, database, auth, security APIs)
+- `control-plane/**` (all backend Python files, database, auth, APIs)
 - `dashboard/src/api/**`
 - `dashboard/src/pages/Auth.tsx`
 - `dashboard/src/pages/Dashboard.tsx`
 - `dashboard/src/pages/RogueAgentDemo.tsx`
 - `dashboard/src/pages/SandboxDetail.tsx`
-- `docs/SECURITY.md`, `docs/TOKENS.md`, `docs/COPY.md`, `docs/HERO.md`
+- `docs/SECURITY.md`, `docs/COPY.md`, `docs/TOKENS.md`
 
-## 5. Blast Radius
-- `HeroChamber.tsx` is only imported by `dashboard/src/pages/Landing.tsx`.
-- `Landing.tsx` is mounted at route `/` in `dashboard/src/App.tsx`.
-- No backend endpoints, API clients, authentication flows, or shared global state stores are affected.
+## 6. Blast Radius
+- Restricted exclusively to the hero section (`<section id="hero">`) inside `dashboard/src/pages/Landing.tsx` and its child component `HeroChamber.tsx`.
+- No route changes, no backend impact, no shared state changes.
 
-## 6. Failure States & Edge Cases
-1. **JavaScript Disabled / SSR Fallback:** Native `poster="/hero/hero-poster.png"` and static HTML telemetry remain visible.
-2. **Reduced Motion (`prefers-reduced-motion: reduce`):** Autoplay is disabled; video remains unattached/paused on the static poster frame.
-3. **Save-Data / Slow Network:** Detected via `navigator.connection`; suppresses video attachment to protect user bandwidth.
-4. **Video Decode Failure (`onerror`):** Gracefully maintains the poster as a full-bleed background and shows a fallback notice without broken media icons.
-5. **Emergency Stop Action:** Clicking "Pull to freeze" pauses video playback, locks the button, updates the status badge to "Frozen", and displays the `$0.0102` trip stamp.
-6. **Scroll Off-Screen:** `IntersectionObserver` pauses video playback when scrolled out of view to consume 0% CPU.
+## 7. Failure States & Edge Cases
+1. **Reduced Motion (`prefers-reduced-motion: reduce`):** Background video does not attach or autoplay; high-contrast static poster remains as full-bleed background.
+2. **Save-Data / Slow Connections:** Video attachment suppressed; static poster image handles the background.
+3. **Contrast / Legibility:** Background has a subtle dark obsidian scrim (`rgba(11, 13, 19, 0.78)`) ensuring WCAG AAA legibility for white text without requiring diffuse colored drop-shadows or gradients.
+4. **Emergency Stop Button:** Clicking "Pull to freeze" halts background video playback and marks telemetry status as `[FROZEN]`.
+5. **Scroll Off-Screen:** `IntersectionObserver` halts video execution when the hero is out of view (0% CPU/GPU).
 
-## 7. Acceptance Tests
-1. **Visual & Behavioral Verification:**
-   - On desktop (≥1024px), the chamber renders in the right 7 columns with minimum height 420px.
-   - On mobile (390px), the chamber renders at full width with a clean 16:9 aspect ratio.
-   - Poster image renders immediately with zero layout shift (CLS = 0.00).
-   - Video attaches after idle/load event and plays muted in loop.
-   - Emergency pull-to-freeze button halts video and updates telemetry state.
-2. **Automated Verification:**
-   - Vitest unit tests in `dashboard/` pass (`npm test` / `npm run build`).
-   - Playwright check confirms responsive display and fallback states.
+## 8. Acceptance Tests
+1. Hero right-column block card is completely removed.
+2. Video/poster spans the entire hero section background edge-to-edge with no purple or orange glowing boxes.
+3. Headline, value proposition, CTAs, and horizontal telemetry bar are centered and legible.
+4. Emergency stop latch freezes background playback and updates state to "Frozen".
+5. TypeScript check (`npm run type-check`) and production build (`npm run build`) pass with 0 errors.
+6. Playwright automated check verifies rendering and interaction.
 
-## 8. Rollback Procedure
-Run `git checkout dev -- dashboard/src/pages/Landing.tsx dashboard/src/components/hero/ dashboard/public/hero/` and remove untracked assets.
-
+## 9. Rollback Procedure
+Run `git checkout dev -- dashboard/src/components/hero/HeroChamber.tsx dashboard/src/pages/Landing.tsx docs/HERO.md`.

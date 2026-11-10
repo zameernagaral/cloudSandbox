@@ -40,22 +40,22 @@ You have supplied verified, bespoke footage specifically tailored to this produc
 
 ---
 
-## 4. Behaviour & Runtime Lifecycle
+## 4. Behaviour & Runtime Lifecycle (Alternative B: Full-Bleed Ambient Horizon)
 
 * **Desktop (1440px):**
-  * Sits in Columns 6 to 12 (7-column deck, `min-h-[420px]`).
-  * Video plays seamlessly behind an absolute-positioned semantic HTML telemetry overlay with `muted`, `playsinline`, `loop`, and `autoplay`.
-  * Real-time hardware readouts (vCPU, RAM, burn velocity, vsock path) and the emergency stop latch float directly above the video using `--color-surface-bulkhead` glass panels (`rgba(22, 27, 38, 0.85)`).
+  * Spans the full hero container as an edge-to-edge ambient background with a subtle dark obsidian scrim (`rgba(11, 13, 19, 0.78)`).
+  * Video plays seamlessly behind centered headline copy and a horizontal telemetry deck with `muted`, `playsinline`, `loop`, and `autoplay`.
+  * Real-time hardware readouts (vCPU, RAM, burn velocity, vsock path) and the emergency stop latch span horizontally in a slim containment command deck.
 * **Mobile (390px):**
-  * Stacks below the headline at 100% container width with an explicit 16:9 aspect ratio (`aspect-video`).
+  * Spans the full hero section background, with centered typography and a vertically-stacked mobile telemetry deck.
   * Uses `hero-scrub.mp4` or stays on `hero-poster.png` to conserve mobile data.
 * **First Load (LCP Optimization):**
   * The `hero-poster.png` displays immediately with the initial HTML paint (<50ms).
   * The video attaches dynamically after `DOMContentLoaded` or through native `<video poster="hero-poster.png">`, guaranteeing zero visual flash.
 * **Scroll Behaviour:**
   * An `IntersectionObserver` monitors the hero container: when the user scrolls down to read the architecture proof, the video automatically pauses, consuming **0% CPU** while off-screen.
-* **Cursor & Hover:**
-  * Hovering over the containment deck reveals subtle border luminescence (`--shadow-glow-amber`), highlighting the active isolation perimeter.
+* **Styling (No AI Slop):**
+  * Pure industrial minimalism: no purple/orange glowing flares or diffuse drop-shadows. Clean hairline borders (`border-rule-frame` / `#2B3448`), crisp chalk-white headings (`#F1F5F9`), and muted industrial steel gray metadata (`#94A3B8`).
 
 ---
 

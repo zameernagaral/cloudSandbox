@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Terminal, Shield, Zap, Lock, Activity, ArrowRight } from 'lucide-react'
+import { Terminal, Shield, Zap, Lock } from 'lucide-react'
 import { HeroChamber } from '../components/hero/HeroChamber'
 
 export function Landing() {
@@ -57,55 +57,11 @@ export function Landing() {
         </nav>
       </header>
 
+      {/* Hero Section: Full-Bleed Ambient Background (Alternative B) */}
+      <HeroChamber />
+
       {/* Main Content Landmark */}
-      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-16 space-y-16 sm:space-y-24">
-        
-        {/* Section 1: Hero & Value Proposition */}
-        <section id="hero" aria-labelledby="hero-heading" className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          
-          {/* Left Column (5 Cols) - Statements & CTAs */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-sm bg-signal-hazard/10 border border-signal-hazard/30 text-signal-hazard text-xs font-mono uppercase tracking-wider">
-              <Zap className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Firecracker v1.7.0 kernel isolation</span>
-            </div>
-
-            <h1 id="hero-heading" className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-ink-primary leading-[1.12]">
-              Run AI coding agents in Firecracker microVMs. With sub-second cost-cap killswitches.
-            </h1>
-
-            <p className="text-sm sm:text-base text-ink-muted leading-relaxed">
-              Contain untrusted LLM tool loops on your own Linux hardware. When an agent enters an infinite loop or exceeds your budget, the killswitch freezes execution in under 1,000 milliseconds.
-            </p>
-
-            <div className="space-y-3 pt-2">
-              <div className="flex flex-wrap items-center gap-3">
-                <Link
-                  to="/demo"
-                  className="btn-primary px-5 py-3 text-sm font-semibold inline-flex items-center gap-2"
-                >
-                  <Activity className="w-4 h-4" aria-hidden="true" />
-                  <span>Test run rogue agent</span>
-                  <ArrowRight className="w-4 h-4 ml-1" aria-hidden="true" />
-                </Link>
-                <a
-                  href="#architecture-proof"
-                  className="btn-secondary px-4 py-3 text-sm font-medium"
-                >
-                  Read architecture docs
-                </a>
-              </div>
-              <p className="text-xs font-mono text-ink-muted">
-                Pre-configured $0.01 budget cap · <span className="text-emerald-400">Verified freeze latency: under 850ms</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Right Column (7 Cols) - Live MicroVM Containment Chamber */}
-          <div className="lg:col-span-7">
-            <HeroChamber />
-          </div>
-        </section>
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-8 py-12 sm:py-16 space-y-16 sm:space-y-24">
 
         {/* Section 2: Technical Architecture Proof */}
         <section id="architecture-proof" aria-labelledby="architecture-heading" className="space-y-8">
