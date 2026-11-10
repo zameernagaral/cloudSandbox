@@ -31,7 +31,7 @@ export default function App() {
       <Routes>
         {/* Public Landing & Interactive Demo */}
         <Route path="/" element={<Landing />} />
-        <Route path="/demo" element={<RogueAgentDemo />} />
+        <Route path="/demo" element={<Navigate to="/#demo" replace />} />
         <Route path="/style-tile" element={<StyleTile />} />
         
         {/* Admin Routes */}

@@ -1,13 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { ArrowRight, Terminal } from 'lucide-react'
 
 export function HeroChamber() {
   const containerRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
-  const isFrozenRef = useRef(false)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isFrozen, setIsFrozen] = useState(false)
   const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
@@ -30,7 +27,7 @@ export function HeroChamber() {
     let cancelled = false
 
     const attachVideo = () => {
-      if (cancelled || !video || isFrozenRef.current) return
+      if (cancelled || !video) return
 
       const isMobile = window.matchMedia('(max-width: 767px)').matches
       const basePath = '/hero/'
@@ -86,7 +83,7 @@ export function HeroChamber() {
           const entry = entries[0]
           if (video && !video.paused && !entry.isIntersecting) {
             video.pause()
-          } else if (video && video.paused && entry.isIntersecting && !isFrozenRef.current) {
+          } else if (video && video.paused && entry.isIntersecting) {
             video.play().catch(() => {})
           }
         },
@@ -106,20 +103,12 @@ export function HeroChamber() {
     }
   }, [])
 
-  const handlePullToFreeze = () => {
-    isFrozenRef.current = true
-    if (videoRef.current) {
-      videoRef.current.pause()
-    }
-    setIsFrozen(true)
-  }
-
   return (
     <section
       ref={containerRef}
       id="hero"
       aria-labelledby="hero-heading"
-      className="relative w-full overflow-hidden border-b border-rule-frame bg-bg-base"
+      className="relative z-10 w-full min-h-[84vh] flex items-center justify-center overflow-hidden border-b border-rule-frame bg-bg-base"
     >
       {/* 1. Full-Bleed Ambient Background (Spans ENTIRE Hero Section) */}
       <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-0">
@@ -150,21 +139,24 @@ export function HeroChamber() {
           }`}
         />
 
-        {/* Dark Obsidian Scrim (Ensures WCAG AAA contrast without purple/orange gradients) */}
-        <div className="absolute inset-0 bg-[#0B0D13]/82" aria-hidden="true" />
+        {/* Subtle Dark Contrast Scrim */}
+        <div className="absolute inset-0 bg-[#0B0D13]/65" aria-hidden="true" />
+
+        {/* Bottom-Right Watermark Cover Mask (ensures the bottom-right video watermark is never visible) */}
+        <div
+          className="absolute right-0 bottom-0 w-72 h-48 bg-[radial-gradient(circle_at_68%_68%,#0B0D13_45%,rgba(11,13,19,0.92)_65%,transparent_100%)]"
+          aria-hidden="true"
+        />
       </div>
 
-      {/* 2. Centered Content Layer Directly Over Background */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center space-y-10">
-        
-        {/* Eyebrow Chip - Crisp Monochrome Slate */}
+      {/* 2. Centered Hero Statements & CTAs (No centered terminal box blocking the 3D cube) */}
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center space-y-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-surface-bulkhead/90 border border-rule-frame text-ink-muted text-xs font-mono uppercase tracking-wider">
           <Terminal className="w-3.5 h-3.5 text-ink-primary" aria-hidden="true" />
           <span>Firecracker v1.7.0 kernel isolation</span>
         </div>
 
-        {/* Display Headline - Chalk White, Solid, Zero Gradients */}
-        <div className="space-y-4 max-w-4xl mx-auto">
+        <div className="space-y-4">
           <h1
             id="hero-heading"
             className="font-display font-bold text-3xl sm:text-5xl lg:text-6xl tracking-tight text-ink-primary leading-[1.12]"
@@ -177,16 +169,15 @@ export function HeroChamber() {
           </p>
         </div>
 
-        {/* Action Buttons - High-Contrast Industrial Slate & White */}
         <div className="space-y-3 pt-2">
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/demo"
+            <a
+              href="#demo"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-sm bg-ink-primary hover:bg-white text-bg-base font-semibold text-sm transition-colors shadow-sm"
             >
               <span>Test run rogue agent</span>
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </Link>
+            </a>
 
             <a
               href="#architecture-proof"
@@ -200,121 +191,14 @@ export function HeroChamber() {
             Pre-configured $0.01 budget cap · <span className="text-emerald-400">Verified freeze latency: under 850ms</span>
           </p>
         </div>
-
-        {/* 3. Horizontal Telemetry Containment Bar (Alternative B) */}
-        <div
-          id="hero-interactive-chamber"
-          aria-label="Containment Chamber Telemetry"
-          className="max-w-4xl mx-auto bg-surface-bulkhead/95 border border-rule-frame rounded-sm shadow-bulkhead text-xs font-mono text-left"
-        >
-          {/* Header strip */}
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 border-b border-rule-frame bg-surface-elevated/40">
-            <div className="flex items-center gap-2 text-ink-primary font-medium">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  isFrozen ? 'bg-signal-breach' : 'bg-emerald-400'
-                }`}
-                aria-hidden="true"
-              />
-              <span className="text-[11px] sm:text-xs">
-                Containment chamber #vm-demo-01
-              </span>
-              <span className="hidden sm:inline text-ink-muted text-[11px]">
-                (/run/fc-01.sock)
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {hasError && (
-                <span className="text-[11px] text-ink-muted">
-                  Static snapshot fallback active
-                </span>
-              )}
-              <span
-                className={`px-2 py-0.5 rounded-sm text-[10px] sm:text-[11px] font-semibold border ${
-                  isFrozen
-                    ? 'bg-signal-breach/15 text-signal-breach border-signal-breach/30'
-                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                }`}
-              >
-                {isFrozen ? 'State: Frozen' : 'State: Armed & Running'}
-              </span>
-            </div>
-          </div>
-
-          {/* Metrics & Control Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-rule-frame">
-            <div className="p-3 space-y-1">
-              <span className="block text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
-                vCPU Allocation
-              </span>
-              <span className="text-ink-primary font-medium text-xs sm:text-sm">
-                2 Cores (42%)
-              </span>
-              <span className="block text-[10px] text-ink-muted">Hardware KVM</span>
-            </div>
-
-            <div className="p-3 space-y-1">
-              <span className="block text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
-                RAM Allocation
-              </span>
-              <span className="text-ink-primary font-medium text-xs sm:text-sm">
-                512 MB (68%)
-              </span>
-              <span className="block text-[10px] text-ink-muted">cgroup v2 ceiling</span>
-            </div>
-
-            <div className="p-3 space-y-1">
-              <span className="block text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
-                Burn Velocity
-              </span>
-              <span className="text-ink-primary font-medium text-xs sm:text-sm">
-                $0.0034 / sec
-              </span>
-              <span className="block text-[10px] text-ink-muted">Prompt token metering</span>
-            </div>
-
-            <div className="p-3 flex flex-col justify-between space-y-2 bg-surface-elevated/20">
-              <div className="space-y-0.5">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
-                  Emergency Stop
-                </span>
-                <span className="block text-[10px] text-ink-muted">
-                  Sub-second killswitch
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={handlePullToFreeze}
-                disabled={isFrozen}
-                className={`w-full px-3 py-1.5 rounded-sm font-mono text-xs font-semibold border transition-all ${
-                  isFrozen
-                    ? 'bg-signal-breach/20 border-signal-breach text-signal-breach cursor-not-allowed'
-                    : 'bg-surface-elevated hover:bg-zinc-800 border-rule-frame text-ink-primary hover:border-zinc-500 active:scale-[0.98]'
-                }`}
-              >
-                {isFrozen ? 'Killswitch Tripped' : 'Pull to freeze'}
-              </button>
-            </div>
-          </div>
-
-          {/* Tripped Notice Stamp */}
-          {isFrozen && (
-            <div
-              role="status"
-              className="px-4 py-2 bg-signal-breach/10 border-t border-signal-breach/30 text-signal-breach text-xs font-mono font-semibold flex items-center justify-between"
-            >
-              <span>[FROZEN] Killswitch tripped at $0.0102</span>
-              <span className="text-[11px] text-signal-breach/80">
-                MicroVM paused via vsock bridge in 42.4ms
-              </span>
-            </div>
-          )}
-
-        </div>
-
       </div>
+
+      {/* 3. Anchor Box over the Bottom-Right Watermark where the Demo Terminal starts before expanding on scroll */}
+      <div
+        id="hero-terminal-anchor"
+        aria-hidden="true"
+        className="hidden lg:block absolute right-7 bottom-6 w-[260px] h-[168px] pointer-events-none"
+      />
     </section>
   )
 }

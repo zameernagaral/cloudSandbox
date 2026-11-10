@@ -2,12 +2,13 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { Terminal, Shield, Zap, Lock } from 'lucide-react'
 import { HeroChamber } from '../components/hero/HeroChamber'
+import { InteractiveSimulator } from '../components/demo/InteractiveSimulator'
 
 export function Landing() {
   return (
     <div className="min-h-screen bg-bg-base text-ink-primary font-sans">
       {/* Global Header & Navigation Landmark */}
-      <header role="banner" className="border-b border-rule-frame bg-surface-bulkhead sticky top-0 z-30">
+      <header role="banner" className="border-b border-rule-frame bg-surface-bulkhead sticky top-0 z-40">
         <nav aria-label="Main Navigation" className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-2.5 text-ink-primary focus:outline-none focus:ring-2 focus:ring-white/40 rounded-sm">
@@ -50,9 +51,9 @@ export function Landing() {
             <Link to="/auth/login" className="btn-secondary text-xs px-3 py-1.5">
               Sign in
             </Link>
-            <Link to="/demo" className="btn-primary text-xs px-3 py-1.5">
+            <a href="#demo" className="btn-primary text-xs px-3 py-1.5">
               Launch demo
-            </Link>
+            </a>
           </div>
         </nav>
       </header>
@@ -61,7 +62,10 @@ export function Landing() {
       <HeroChamber />
 
       {/* Main Content Landmark */}
-      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-8 py-12 sm:py-16 space-y-16 sm:space-y-24">
+      <main id="main-content" className="relative z-20 max-w-7xl mx-auto px-4 sm:px-8 py-12 sm:py-16 space-y-16 sm:space-y-24">
+        
+        {/* Interactive Rogue Agent Simulator (Expanded Terminal Console) */}
+        <InteractiveSimulator />
 
         {/* Section 2: Technical Architecture Proof */}
         <section id="architecture-proof" aria-labelledby="architecture-heading" className="space-y-8">
@@ -181,9 +185,9 @@ export function Landing() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link to="/demo" className="hover:text-ink-primary">
+            <a href="#demo" className="hover:text-ink-primary">
               Demo
-            </Link>
+            </a>
             <Link to="/style-tile" className="hover:text-ink-primary">
               Style Tile
             </Link>
