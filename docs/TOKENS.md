@@ -19,8 +19,9 @@ Aesthetic: Industrial containment bulkhead — rugged precision, authentic mecha
 
 ### Usage Rules
 1. Background and surface colors must never use generic pure black (`#000000`) or flat navy (`#1E1E2E`); use `#0B0D13` to provide depth without washed-out grays.
-2. The hazard accent (`#F59E0B`) is restricted to at most 2% to 5% of the total screen real estate (only for live alert meters, arming toggles, and status badges).
-3. Every card and terminal panel must be framed with `--color-rule-frame` (`#2B3448`) to give the structural feel of bolted steel bulkheads.
+2. Zero AI-slop aesthetic: no purple accents, no orange/amber action buttons, and no colorful glowing drop-shadows or radial gradient blobs. Primary interactive elements use high-contrast chalk white (`#F1F5F9`) with dark text (`#0B0D13`).
+3. Every card and terminal panel must be framed with crisp 1px `--color-rule-frame` (`#2B3448`) to give the structural feel of precision-milled hardware bulkheads.
+4. Containment Red (`#EF4444`) is strictly reserved for tripped killswitch indicators, destructive teardown, and fatal error badges. Operational status uses subtle emerald (`#22C55E` / `#34D399`).
 
 ### Contrast Verification Matrix
 All pairs meet WCAG AA standards (minimum 4.5:1 for body text, 3:1 for large text and UI controls):

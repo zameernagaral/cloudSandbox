@@ -41,7 +41,6 @@ export default {
       },
       boxShadow: {
         bulkhead: '0 1px 3px 0 rgba(0, 0, 0, 0.5)',
-        'glow-amber': '0 0 16px rgba(245, 158, 11, 0.18)',
         'glow-red': '0 0 20px rgba(239, 68, 68, 0.28)',
       },
       transitionDuration: {

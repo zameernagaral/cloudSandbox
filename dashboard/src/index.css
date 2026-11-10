@@ -27,16 +27,16 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md bg-signal-hazard hover:bg-amber-500 
-    text-bg-base font-semibold text-sm transition-all duration-normal ease-mechanical
-    focus:outline-none focus:ring-2 focus:ring-signal-hazard focus:ring-offset-2 focus:ring-offset-bg-base;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-ink-primary hover:bg-white 
+    text-bg-base font-semibold text-sm transition-colors duration-fast ease-mechanical shadow-sm
+    focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-bg-base;
   }
   .btn-secondary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md bg-surface-bulkhead border border-rule-frame 
-    text-ink-muted hover:text-ink-primary hover:border-signal-hazard/50 font-medium text-sm transition-all duration-normal ease-mechanical;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-surface-bulkhead border border-rule-frame 
+    text-ink-muted hover:text-ink-primary hover:border-zinc-500 hover:bg-surface-elevated font-medium text-sm transition-colors duration-fast ease-mechanical;
   }
   .btn-danger {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md bg-signal-breach/15 border border-signal-breach/40 
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-signal-breach/15 border border-signal-breach/40 
     text-signal-breach hover:bg-signal-breach/25 font-semibold text-sm transition-all duration-normal ease-mechanical;
   }
   .card {
@@ -44,7 +44,7 @@
   }
   .input {
     @apply w-full bg-bg-base border border-rule-frame rounded-sm px-3 py-2 text-ink-primary text-sm 
-    placeholder:text-ink-muted/50 focus:outline-none focus:border-signal-hazard/70 transition-colors;
+    placeholder:text-ink-muted/50 focus:outline-none focus:border-ink-muted transition-colors;
   }
   .badge-running {
     @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
@@ -60,7 +60,7 @@
   }
   .badge-creating {
     @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
-    bg-signal-hazard/15 text-signal-hazard border border-signal-hazard/30;
+    bg-zinc-800 text-ink-primary border border-rule-frame;
   }
   .badge-error {
     @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
