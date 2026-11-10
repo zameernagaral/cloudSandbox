@@ -1,0 +1,78 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation "Main Navigation" [ref=e5]:
+      - link "Cloud Sandbox Firecracker microVM Isolation" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e11]:
+          - generic [ref=e12]: Cloud Sandbox
+          - generic [ref=e13]: Firecracker microVM Isolation
+      - generic [ref=e14]:
+        - link "Sign in" [ref=e15] [cursor=pointer]:
+          - /url: /auth/login
+        - link "Launch demo" [ref=e16] [cursor=pointer]:
+          - /url: /demo
+  - main [ref=e17]:
+    - region [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e20]: Firecracker v1.7.0 kernel isolation
+        - heading "Run AI coding agents in Firecracker microVMs. With sub-second cost-cap killswitches." [level=1] [ref=e24]
+        - paragraph [ref=e25]: Contain untrusted LLM tool loops on your own Linux hardware. When an agent enters an infinite loop or exceeds your budget, the killswitch freezes execution in under 1,000 milliseconds.
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - link "Test run rogue agent" [ref=e28] [cursor=pointer]:
+              - /url: /demo
+            - link "Read architecture docs" [ref=e34] [cursor=pointer]:
+              - /url: "#architecture-proof"
+          - paragraph [ref=e35]: "Pre-configured $0.01 budget cap · Verified freeze latency: under 850ms"
+      - generic "Interactive Hero Placeholder" [ref=e37]:
+        - generic [ref=e38]:
+          - generic [ref=e39]: "[HERO PLACEHOLDER: Live MicroVM Containment Chamber]"
+          - generic [ref=e42]: "Target Size: 7-Col Deck (420px min-h)"
+        - generic [ref=e43]:
+          - generic [ref=e44]: Hardware Isolation & VSock Terminal Mount
+          - paragraph [ref=e48]: "Reserved for /hero: Interactive Firecracker microVM chamber, real-time vCPU telemetry dials, live stdout, and physical emergency stop latch."
+          - generic [ref=e49]: "Asymmetric Grid: Columns 6-12 (1440px) / 100% Width (390px)"
+        - generic [ref=e51]:
+          - generic [ref=e52]: "Fallback Mode: Static Wireframe Spec"
+          - generic [ref=e53]: "Sub-Second Freeze Latency: <850ms"
+    - region [ref=e54]:
+      - generic [ref=e55]:
+        - heading "Technical Architecture & Defense-in-Depth" [level=2] [ref=e56]
+        - paragraph [ref=e57]: Built on verified Linux KVM hypervisor boundaries and bare-metal chroot isolation.
+      - generic [ref=e58]:
+        - article [ref=e59]:
+          - heading "KVM hypervisor boundaries" [level=3] [ref=e64]
+          - paragraph [ref=e65]: Runs code in dedicated microVMs with Linux cgroups, chroot jailers, and individual kernels. A container breakout cannot compromise the host.
+        - article [ref=e66]:
+          - heading "Sub-second cost ceiling" [level=3] [ref=e70]
+          - paragraph [ref=e71]: The host proxy meters prompt and completion tokens per millisecond. If spending exceeds your threshold, the microVM is paused immediately.
+        - article [ref=e72]:
+          - heading "Outbound domain whitelist" [level=3] [ref=e76]
+          - paragraph [ref=e77]: Network traffic is restricted to approved APIs (such as api.openai.com). API keys are injected at the proxy and never written to the guest disk.
+    - region [ref=e78]:
+      - generic [ref=e79]:
+        - heading "Start in two commands" [level=2] [ref=e80]
+        - paragraph [ref=e81]: Connect your KVM-enabled Linux server and deploy isolated microVM policies.
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - generic [ref=e84]: "On your KVM-enabled Linux server:"
+          - generic [ref=e85]:
+            - code [ref=e86]: $ sandboxctl host init
+            - generic [ref=e87]: host-agent.service
+        - generic [ref=e88]:
+          - generic [ref=e89]: "In your project directory:"
+          - code [ref=e91]: "$ sandboxctl deploy --policy '{\"max_cost_usd\": 0.50}'"
+  - contentinfo [ref=e92]:
+    - generic [ref=e93]:
+      - generic [ref=e94]:
+        - generic [ref=e95]: Cloud Sandbox
+        - generic [ref=e96]: Hardware-isolated microVM runtime
+        - generic [ref=e97]: Firecracker v1.7.0 | Linux KVM 5.10
+      - generic [ref=e98]:
+        - link "Demo" [ref=e99] [cursor=pointer]:
+          - /url: /demo
+        - link "Style Tile" [ref=e100] [cursor=pointer]:
+          - /url: /style-tile
+        - link "GitHub" [ref=e101] [cursor=pointer]:
+          - /url: https://github.com/your-org/cloud-sandbox
+        - generic [ref=e102]: "System status: 100%"

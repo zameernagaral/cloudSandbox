@@ -210,18 +210,38 @@ export function Landing() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-            <div className="p-4 bg-bg-base border border-rule-frame rounded-sm space-y-2">
-              <span className="text-ink-muted block text-[11px] uppercase">On your KVM-enabled Linux server:</span>
-              <div className="p-2.5 bg-surface-bulkhead rounded-sm border border-rule-frame text-ink-primary flex items-center justify-between">
-                <code>$ sandboxctl host init</code>
-                <span className="text-[10px] text-ink-muted">host-agent.service</span>
+            {/* Box 1: Host Node */}
+            <div className="border border-rule-frame rounded-sm bg-bg-base overflow-hidden">
+              <div className="bg-surface-elevated px-3 py-2 border-b border-rule-frame flex items-center justify-between text-2xs text-ink-muted">
+                <span className="font-semibold text-signal-hazard">HOST HYPERVISOR NODE</span>
+                <span>Ubuntu 22.04 • /dev/kvm</span>
+              </div>
+              <div className="p-4 space-y-2">
+                <span className="text-ink-muted block text-2xs uppercase">On your KVM-enabled Linux server:</span>
+                <div className="p-3 bg-surface-bulkhead rounded-sm border border-rule-frame text-ink-primary flex items-center justify-between">
+                  <code className="text-sm font-bold text-ink-primary">$ sandboxctl host init</code>
+                  <span className="text-2xs text-emerald-400 font-mono">host-agent.service</span>
+                </div>
+                <p className="text-3xs text-ink-muted">
+                  Configures cgroups v2, verifies /dev/kvm access, and starts the mTLS daemon.
+                </p>
               </div>
             </div>
 
-            <div className="p-4 bg-bg-base border border-rule-frame rounded-sm space-y-2">
-              <span className="text-ink-muted block text-[11px] uppercase">In your project directory:</span>
-              <div className="p-2.5 bg-surface-bulkhead rounded-sm border border-rule-frame text-ink-primary">
-                <code>$ sandboxctl deploy --policy '{`{"max_cost_usd": 0.50}`}'</code>
+            {/* Box 2: Developer Workstation */}
+            <div className="border border-rule-frame rounded-sm bg-bg-base overflow-hidden">
+              <div className="bg-surface-elevated px-3 py-2 border-b border-rule-frame flex items-center justify-between text-2xs text-ink-muted">
+                <span className="font-semibold text-ink-primary">LOCAL WORKSTATION</span>
+                <span>sandboxctl v1.0 • Python CLI</span>
+              </div>
+              <div className="p-4 space-y-2">
+                <span className="text-ink-muted block text-2xs uppercase">In your project directory:</span>
+                <div className="p-3 bg-surface-bulkhead rounded-sm border border-rule-frame text-ink-primary">
+                  <code className="text-sm font-bold text-ink-primary">$ sandboxctl deploy --policy '{`{"max_cost_usd": 0.50}`}'</code>
+                </div>
+                <p className="text-3xs text-ink-muted">
+                  Provisions an isolated microVM in &lt;850ms and bridges interactive stdio via VSock.
+                </p>
               </div>
             </div>
           </div>

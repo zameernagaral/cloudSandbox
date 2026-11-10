@@ -41,6 +41,18 @@ function handleMockRequest<T>(method: string, path: string, body?: any): T {
     if (cleanPath === '/auth/me') {
       return mockUser as unknown as T
     }
+    if (cleanPath === '/admin/overview') {
+      return mockStore.getAdminOverview() as unknown as T
+    }
+    if (cleanPath === '/admin/users') {
+      return mockStore.getAdminUsers() as unknown as T
+    }
+    if (cleanPath === '/admin/audit-logs') {
+      return mockStore.getAuditLogs() as unknown as T
+    }
+    if (cleanPath === '/admin/alerts') {
+      return mockStore.getBreachAlerts() as unknown as T
+    }
   }
 
   if (method === 'POST') {

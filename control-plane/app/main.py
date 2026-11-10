@@ -18,6 +18,7 @@ import logging
 import structlog
 import uvicorn
 from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -25,6 +26,7 @@ from app.config import get_settings
 from app.db.redis_client import close_redis, get_redis
 from app.killswitch.monitor import run_monitor
 from app.metrics import router as metrics_router
+from app.middleware.request_context import RequestContextMiddleware
 
 settings = get_settings()
 
@@ -45,6 +47,9 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
+# Security & Context Middleware
+app.add_middleware(RequestContextMiddleware)
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -60,6 +65,7 @@ from app.api.v1.sandboxes import router as sandboxes_router
 from app.api.v1.policies import router as policies_router
 from app.api.v1.hosts import router as hosts_router
 from app.api.v1.settings_routes import router as settings_router
+from app.api.v1.admin import router as admin_router
 from app.api.v1.internal import router as internal_router
 from app.api.v1.demo import router as demo_router
 from app.ws.terminal import router as terminal_router
@@ -71,6 +77,7 @@ app.include_router(sandboxes_router, prefix=API_PREFIX)
 app.include_router(policies_router, prefix=API_PREFIX)
 app.include_router(hosts_router, prefix=API_PREFIX)
 app.include_router(settings_router, prefix=API_PREFIX)
+app.include_router(admin_router, prefix=API_PREFIX)
 app.include_router(demo_router, prefix=API_PREFIX)
 app.include_router(internal_router)  # No API prefix — called by host agent directly
 app.include_router(terminal_router)
@@ -78,21 +85,49 @@ app.include_router(events_router)
 app.include_router(metrics_router)
 
 
-# ── Health check ─────────────────────────────────────────────────────────────
+# ── Health checks ────────────────────────────────────────────────────────────
 @app.get("/health")
+@app.get("/api/v1/health")
 async def health() -> dict:
     redis = await get_redis()
     redis_ok = await redis.ping()
     return {"status": "ok", "redis": redis_ok}
 
 
-# ── Global error handler ──────────────────────────────────────────────────────
+# ── Global error handlers ─────────────────────────────────────────────────────
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", "unknown")
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "success": False,
+            "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Invalid request parameters or payload",
+                "details": exc.errors(),
+                "request_id": request_id,
+            },
+        },
+        headers={"X-Request-ID": request_id},
+    )
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    log.error("unhandled_exception", path=request.url.path, error=str(exc))
+    request_id = getattr(request.state, "request_id", "unknown")
+    log.error("unhandled_exception", path=request.url.path, error=str(exc), request_id=request_id)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"success": False, "error": {"code": "INTERNAL_ERROR", "message": "An unexpected error occurred"}},
+        content={
+            "success": False,
+            "error": {
+                "code": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred",
+                "request_id": request_id,
+            },
+        },
+        headers={"X-Request-ID": request_id},
     )
 
 

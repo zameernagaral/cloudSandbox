@@ -5,12 +5,14 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.db.models import KillswitchAction, SandboxState
 
 
 class PolicyCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str = Field(max_length=128)
     max_cost_usd: float | None = Field(None, gt=0)
     max_tokens: int | None = Field(None, gt=0)
@@ -25,6 +27,8 @@ class PolicyCreate(BaseModel):
 
 
 class PolicyUpdate(PolicyCreate):
+    model_config = ConfigDict(extra="forbid")
+
     name: str | None = None  # type: ignore[assignment]
 
 
@@ -39,6 +43,8 @@ class PolicyOut(PolicyCreate):
 
 
 class SandboxCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str = Field(max_length=128)
     host_id: str
     policy_id: str | None = None
@@ -124,6 +130,8 @@ class HostRegisterResponse(BaseModel):
 
 
 class ResumeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     new_max_cost_usd: float | None = None
     new_max_tokens: int | None = None
 
@@ -137,6 +145,8 @@ class SandboxEvent(BaseModel):
 
 
 class ApiKeyCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str = Field(max_length=128)
 
 
@@ -157,6 +167,8 @@ class ApiKeyCreated(ApiKeyOut):
 
 
 class LLMCredentialSet(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     provider: str = Field(pattern="^(openai|anthropic)$")
     api_key: str = Field(min_length=10)
 
