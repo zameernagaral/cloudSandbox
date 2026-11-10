@@ -50,11 +50,9 @@
   /* Structural Rule Weights */
   --rule-thin: 1px;
   --rule-focus: 2px;
-  --rule-hazard: 4px;
 
   /* Shadows */
   --shadow-bulkhead: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
-  --shadow-glow-amber: 0 0 16px rgba(245, 158, 11, 0.18);
   --shadow-glow-red: 0 0 20px rgba(239, 68, 68, 0.28);
 
   /* Motion */

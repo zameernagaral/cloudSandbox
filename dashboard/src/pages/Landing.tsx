@@ -10,9 +10,9 @@ export function Landing() {
       <header role="banner" className="border-b border-rule-frame bg-surface-bulkhead sticky top-0 z-30">
         <nav aria-label="Main Navigation" className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 text-ink-primary focus:outline-none focus:ring-2 focus:ring-signal-hazard rounded-sm">
-              <div className="w-8 h-8 rounded-sm bg-signal-hazard/15 border border-signal-hazard/30 flex items-center justify-center">
-                <Terminal className="w-4 h-4 text-signal-hazard" aria-hidden="true" />
+            <Link to="/" className="flex items-center gap-2.5 text-ink-primary focus:outline-none focus:ring-2 focus:ring-white/40 rounded-sm">
+              <div className="w-8 h-8 rounded-sm bg-surface-elevated border border-rule-frame flex items-center justify-center">
+                <Terminal className="w-4 h-4 text-ink-primary" aria-hidden="true" />
               </div>
               <div className="flex flex-col">
                 <span className="font-display font-bold text-base tracking-tight leading-none text-ink-primary">
@@ -79,7 +79,7 @@ export function Landing() {
             {/* Pillar 1 */}
             <article className="card p-6 bg-surface-bulkhead border border-rule-frame rounded-md space-y-3 shadow-bulkhead">
               <div className="w-10 h-10 rounded-sm bg-bg-base border border-rule-frame flex items-center justify-center">
-                <Lock className="w-5 h-5 text-signal-hazard" aria-hidden="true" />
+                <Lock className="w-5 h-5 text-ink-primary" aria-hidden="true" />
               </div>
               <h3 className="font-display font-semibold text-lg text-ink-primary">
                 KVM hypervisor boundaries
@@ -92,7 +92,7 @@ export function Landing() {
             {/* Pillar 2 */}
             <article className="card p-6 bg-surface-bulkhead border border-rule-frame rounded-md space-y-3 shadow-bulkhead">
               <div className="w-10 h-10 rounded-sm bg-bg-base border border-rule-frame flex items-center justify-center">
-                <Zap className="w-5 h-5 text-signal-hazard" aria-hidden="true" />
+                <Zap className="w-5 h-5 text-ink-primary" aria-hidden="true" />
               </div>
               <h3 className="font-display font-semibold text-lg text-ink-primary">
                 Sub-second cost ceiling
@@ -105,7 +105,7 @@ export function Landing() {
             {/* Pillar 3 */}
             <article className="card p-6 bg-surface-bulkhead border border-rule-frame rounded-md space-y-3 shadow-bulkhead">
               <div className="w-10 h-10 rounded-sm bg-bg-base border border-rule-frame flex items-center justify-center">
-                <Shield className="w-5 h-5 text-signal-hazard" aria-hidden="true" />
+                <Shield className="w-5 h-5 text-ink-primary" aria-hidden="true" />
               </div>
               <h3 className="font-display font-semibold text-lg text-ink-primary">
                 Outbound domain whitelist
@@ -133,7 +133,7 @@ export function Landing() {
             {/* Box 1: Host Node */}
             <div className="border border-rule-frame rounded-sm bg-bg-base overflow-hidden">
               <div className="bg-surface-elevated px-3 py-2 border-b border-rule-frame flex items-center justify-between text-2xs text-ink-muted">
-                <span className="font-semibold text-signal-hazard">HOST HYPERVISOR NODE</span>
+                <span className="font-semibold text-ink-primary">HOST HYPERVISOR NODE</span>
                 <span>Ubuntu 22.04 • /dev/kvm</span>
               </div>
               <div className="p-4 space-y-2">
