@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Terminal, Shield, Zap, Lock, Activity, ArrowRight } from 'lucide-react'
+import { HeroChamber } from '../components/hero/HeroChamber'
 
 export function Landing() {
   return (
@@ -100,46 +101,9 @@ export function Landing() {
             </div>
           </div>
 
-          {/* Right Column (7 Cols) - Labelled Hero Placeholder Box at Exact Size */}
+          {/* Right Column (7 Cols) - Live MicroVM Containment Chamber */}
           <div className="lg:col-span-7">
-            <div
-              id="hero-interactive-chamber"
-              aria-label="Interactive Hero Placeholder"
-              className="w-full min-h-[420px] bg-surface-bulkhead border border-rule-frame rounded-md p-6 flex flex-col justify-between shadow-bulkhead"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-rule-frame pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-signal-hazard" aria-hidden="true" />
-                  <span className="font-mono text-xs font-semibold text-ink-primary">
-                    [HERO PLACEHOLDER: Live MicroVM Containment Chamber]
-                  </span>
-                </div>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-sm bg-signal-hazard/15 text-signal-hazard border border-signal-hazard/30">
-                  Target Size: 7-Col Deck (420px min-h)
-                </span>
-              </div>
-
-              {/* Center Blueprint Area */}
-              <div className="my-auto py-8 text-center space-y-3 border border-dashed border-rule-frame rounded-sm bg-bg-base/60 p-6">
-                <div className="flex items-center justify-center gap-2 text-signal-hazard font-mono text-xs uppercase tracking-wider font-semibold">
-                  <Terminal className="w-4 h-4" aria-hidden="true" />
-                  <span>Hardware Isolation & VSock Terminal Mount</span>
-                </div>
-                <p className="font-mono text-sm text-ink-primary font-medium max-w-md mx-auto">
-                  Reserved for /hero: Interactive Firecracker microVM chamber, real-time vCPU telemetry dials, live stdout, and physical emergency stop latch.
-                </p>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-surface-elevated text-xs font-mono text-ink-muted border border-rule-frame">
-                  <span>Asymmetric Grid: Columns 6-12 (1440px) / 100% Width (390px)</span>
-                </div>
-              </div>
-
-              {/* Footer specs */}
-              <div className="flex items-center justify-between border-t border-rule-frame pt-3 text-xs font-mono text-ink-muted">
-                <span>Fallback Mode: Static Wireframe Spec</span>
-                <span>Sub-Second Freeze Latency: &lt;850ms</span>
-              </div>
-            </div>
+            <HeroChamber />
           </div>
         </section>
 

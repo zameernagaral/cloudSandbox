@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cloud Sandbox</title>
+<link rel="preload" as="image" href="/public/hero/hero-poster.png" fetchpriority="high">
+<style>
+:root{
+  --color-bg-base:#0B0D13; --color-surface-bulkhead:#161B26; --color-surface-elevated:#1E2536;
+  --color-rule-frame:#2B3448; --color-ink-primary:#F1F5F9; --color-ink-muted:#94A3B8;
+  --color-signal-hazard:#F59E0B; --color-signal-breach:#EF4444;
+  --shadow-glow-amber:0 0 16px rgba(245,158,11,.18);
+  --ease:cubic-bezier(.16,1,.3,1); --motion-fast:120ms;
+  --font-display:"Space Grotesk",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","Fragment Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-bg-base);color:var(--color-ink-primary);font:16px/1.55 var(--font-body)}
+.hero{max-width:80rem;margin:0 auto;padding:48px 16px;display:grid;gap:32px}
+.eyebrow{display:inline-block;font:600 12px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--color-signal-hazard);border:1px solid var(--color-rule-frame);border-radius:4px;padding:4px 8px}
+h1{font:700 clamp(2rem,1.5rem + 2.5vw,2.75rem)/1.15 var(--font-display);letter-spacing:-.025em;margin:16px 0}
+.sub{color:var(--color-ink-muted);max-width:34rem;margin:0 0 24px}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{font:600 14px var(--font-body);padding:12px 20px;border-radius:4px;text-decoration:none;
+  border:1px solid var(--color-rule-frame);color:var(--color-ink-primary)}
+.btn.primary{background:var(--color-signal-hazard);border-color:var(--color-signal-hazard);color:#0B0D13}
+.btn:focus-visible,.stop:focus-visible{outline:2px solid var(--color-signal-hazard);outline-offset:2px}
+.helper{font:12px var(--font-mono);color:var(--color-ink-muted)}
+.tag{margin-top:24px;font:12px var(--font-mono);color:var(--color-ink-muted)}
+
+/* chamber: fixed aspect ratio => CLS 0 */
+.chamber{position:relative;aspect-ratio:16/9;background:var(--color-surface-bulkhead);
+  border:1px solid var(--color-rule-frame);border-radius:6px;overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,.5);transition:box-shadow var(--motion-fast) var(--ease)}
+.chamber:hover{box-shadow:var(--shadow-glow-amber)}
+.chamber>img,.chamber>video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.chamber>video{opacity:0;transition:opacity var(--motion-fast) var(--ease)}
+.chamber>video.on{opacity:1}
+.chamber::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(11,13,19,.7))}
+.overlay{position:absolute;inset:0;z-index:1;padding:12px;display:flex;flex-direction:column;justify-content:space-between}
+.glass{background:rgba(22,27,38,.85);border:1px solid var(--color-rule-frame);border-radius:6px}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font:12px var(--font-mono)}
+.pill{border:1px solid var(--color-rule-frame);border-radius:4px;padding:2px 8px;color:var(--color-signal-hazard);font-weight:600}
+.pill.frozen{color:var(--color-signal-breach)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:9999px;background:var(--color-signal-hazard);margin-right:6px}
+.foot{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-end}
+dl.metrics{margin:0;padding:8px 12px;display:grid;grid-template-columns:repeat(2,auto);gap:4px 20px;font:12px var(--font-mono)}
+dl.metrics dt{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--color-ink-muted)}
+dl.metrics dd{margin:0 0 4px;color:var(--color-ink-primary)}
+.stopbox{padding:8px 12px;font:12px var(--font-mono);border-top:4px solid var(--color-signal-hazard)}
+.stopbox small{display:block;color:var(--color-ink-muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+.stop{margin-top:4px;background:var(--color-surface-elevated);color:var(--color-ink-primary);border:1px solid var(--color-signal-hazard);
+  border-radius:4px;padding:6px 12px;font:600 12px var(--font-mono);cursor:pointer}
+.stamp{color:var(--color-signal-breach);margin-top:4px}
+.notice{position:absolute;z-index:2;left:12px;bottom:12px;padding:6px 10px;font:12px var(--font-mono);color:var(--color-ink-muted)}
+[hidden]{display:none!important}
+@media(min-width:1024px){
+  .hero{grid-template-columns:5fr 7fr;align-items:center;gap:24px;padding:80px 24px}
+  .chamber{min-height:420px;aspect-ratio:auto}
+}
+@media(max-width:767px){.foot dl.metrics{grid-template-columns:repeat(2,auto)} .overlay{padding:8px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="hero">
+  <div>
+    <span class="eyebrow">Firecracker v1.7.0 kernel isolation</span>
+    <h1>Run AI coding agents in Firecracker microVMs. With sub-second cost-cap killswitches.</h1>
+    <p class="sub">Contain untrusted LLM tool loops on your own Linux hardware. When an agent enters an infinite loop or exceeds your budget, the killswitch freezes execution in under 1,000 milliseconds.</p>
+    <div class="cta">
+      <a class="btn primary" href="#demo">Test run rogue agent</a>
+      <a class="btn" href="#docs">Read architecture docs</a>
+      <span class="helper">Pre-configured $0.01 budget cap</span>
+    </div>
+    <p class="tag">Verified freeze latency: under 850ms</p>
+  </div>
+
+  <section class="chamber" id="chamber" aria-label="Live containment preview">
+    <!-- Static fallback: this is the LCP element and already looks finished with no JS -->
+    <img src="/public/hero/hero-poster.png" width="1920" height="1080" fetchpriority="high" decoding="async"
+         alt="Three-dimensional isometric code block glowing in an isolated virtual machine void">
+    <video id="film" muted playsinline loop preload="none" tabindex="-1"
+           aria-label="MicroVM autonomous code execution stream"></video>
+
+    <div class="overlay">
+      <div class="glass bar">
+        <span><span class="dot"></span>Containment chamber #vm-demo-01</span>
+        <span class="pill" id="state">Running</span>
+      </div>
+      <div class="foot">
+        <dl class="glass metrics">
+          <div><dt>vCPU allocation</dt><dd>2 Cores (42%)</dd></div>
+          <div><dt>RAM allocation</dt><dd>512 MB (68%)</dd></div>
+          <div><dt>Burn velocity</dt><dd>$0.0034/sec</dd></div>
+          <div><dt>VSock path</dt><dd>/run/fc-01.sock</dd></div>
+        </dl>
+        <div class="glass stopbox">
+          <small>Live stdout (/bin/bash via vsock)</small>
+          <div>Emergency stop</div>
+          <button class="stop" id="stop" type="button">Pull to freeze</button>
+          <div class="stamp" id="stamp" role="status" hidden>[FROZEN] Killswitch tripped at $0.0102</div>
+        </div>
+      </div>
+    </div>
+    <p class="glass notice" id="notice" hidden>Hardware video decode unavailable. Displaying static containment snapshot.</p>
+  </section>
+</main>
+
+<script>
+(function () {
+  var chamber = document.getElementById('chamber');
+  var film = document.getElementById('film');
+  var notice = document.getElementById('notice');
+  var base = '/public/hero/';
+
+  // Killswitch demo control
+  var stop = document.getElementById('stop');
+  stop.addEventListener('click', function () {
+    film.pause();
+    document.getElementById('stamp').hidden = false;
+    var s = document.getElementById('state');
+    s.textContent = 'Frozen'; s.classList.add('frozen');
+    stop.disabled = true;
+  });
+
+  // Decide whether to load the film at all; otherwise stay on the poster.
+  function shouldStayStatic() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
+    var c = navigator.connection;
+    if (c) {
+      if (c.saveData) return true;
+      if (/(^|-)2g|3g/.test(c.effectiveType || '')) return true;
+      if (typeof c.downlink === 'number' && c.downlink > 0 && c.downlink < 1) return true;
+    }
+    return false;
+  }
+
+  function fail() {
+    film.classList.remove('on');
+    film.removeAttribute('src');
+    film.load();
+    notice.hidden = false; // poster stays as full-bleed background
+  }
+
+  function attach() {
+    if (shouldStayStatic()) return;
+    var mobile = window.matchMedia('(max-width: 767px)').matches;
+    var src;
+    if (mobile) src = base + 'hero-scrub.mp4';
+    else if (film.canPlayType('video/webm; codecs="vp9"')) src = base + 'hero-720.webm';
+    else src = base + 'hero-1080.mp4';
+
+    film.addEventListener('error', fail);
+    film.addEventListener('playing', function () { film.classList.add('on'); });
+    film.src = src;
+    film.preload = 'auto';
+    var p = film.play();
+    if (p && p.catch) p.catch(fail);
+
+    // Pause when off-screen
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (e) {
+        if (document.getElementById('stop').disabled) return; // stays frozen
+        if (e[0].isIntersecting) { var q = film.play(); if (q && q.catch) q.catch(function(){}); }
+        else film.pause();
+      }).observe(chamber);
+    }
+  }
+
+  // Load after the load event, when the browser is idle
+  function schedule() {
+    if ('requestIdleCallback' in window) requestIdleCallback(attach, { timeout: 2000 });
+    else setTimeout(attach, 200);
+  }
+  if (document.readyState === 'complete') schedule();
+  else window.addEventListener('load', schedule);
+})();
+</script>
+</body>
+</html>
+
