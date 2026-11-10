@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import './styles/tokens.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,64 +7,64 @@
   * { box-sizing: border-box; }
   
   html {
-    background: #0A0B0F;
-    color: #E5E7EB;
-    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--color-bg-base);
+    color: var(--color-ink-primary);
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
   }
 
   body {
     margin: 0;
     min-height: 100vh;
-    background: #0A0B0F;
+    background: var(--color-bg-base);
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #111318; }
-  ::-webkit-scrollbar-thumb { background: #1E2028; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #2D3142; }
+  ::-webkit-scrollbar-track { background: var(--color-bg-base); }
+  ::-webkit-scrollbar-thumb { background: var(--color-rule-frame); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3E4B65; }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent hover:bg-accent-glow 
-    text-white font-medium text-sm transition-all duration-150 
-    focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md bg-signal-hazard hover:bg-amber-500 
+    text-bg-base font-semibold text-sm transition-all duration-normal ease-mechanical
+    focus:outline-none focus:ring-2 focus:ring-signal-hazard focus:ring-offset-2 focus:ring-offset-bg-base;
   }
   .btn-secondary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface border border-border 
-    text-text-dim hover:text-text hover:border-accent/50 font-medium text-sm transition-all duration-150;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md bg-surface-bulkhead border border-rule-frame 
+    text-ink-muted hover:text-ink-primary hover:border-signal-hazard/50 font-medium text-sm transition-all duration-normal ease-mechanical;
   }
   .btn-danger {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-danger/10 border border-danger/30 
-    text-danger hover:bg-danger/20 font-medium text-sm transition-all duration-150;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md bg-signal-breach/15 border border-signal-breach/40 
+    text-signal-breach hover:bg-signal-breach/25 font-semibold text-sm transition-all duration-normal ease-mechanical;
   }
   .card {
-    @apply bg-surface border border-border rounded-xl;
+    @apply bg-surface-bulkhead border border-rule-frame rounded-md shadow-bulkhead;
   }
   .input {
-    @apply w-full bg-bg border border-border rounded-lg px-3 py-2 text-text text-sm 
-    placeholder:text-muted focus:outline-none focus:border-accent/60 transition-colors;
+    @apply w-full bg-bg-base border border-rule-frame rounded-sm px-3 py-2 text-ink-primary text-sm 
+    placeholder:text-ink-muted/50 focus:outline-none focus:border-signal-hazard/70 transition-colors;
   }
   .badge-running {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium 
-    bg-success/15 text-success border border-success/20;
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
+    bg-emerald-500/15 text-emerald-400 border border-emerald-500/25;
   }
   .badge-frozen {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium 
-    bg-frozen/15 text-frozen border border-frozen/20;
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-semibold 
+    bg-signal-breach/15 text-signal-breach border border-signal-breach/30;
   }
   .badge-stopped {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium 
-    bg-muted/15 text-muted border border-muted/20;
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
+    bg-ink-muted/15 text-ink-muted border border-ink-muted/20;
   }
   .badge-creating {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium 
-    bg-warning/15 text-warning border border-warning/20;
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
+    bg-signal-hazard/15 text-signal-hazard border border-signal-hazard/30;
   }
   .badge-error {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium 
-    bg-danger/15 text-danger border border-danger/20;
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
+    bg-signal-breach/20 text-signal-breach border border-signal-breach/40;
   }
 }
 
@@ -77,26 +77,9 @@
 .frozen-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(6, 182, 212, 0.06);
-  border: 1px solid rgba(6, 182, 212, 0.3);
-  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 2px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--radius-md);
   pointer-events: none;
   z-index: 10;
 }
-
-/* Gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, #5B6AF0 0%, #8B5CF6 50%, #06B6D4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Glow effects */
-.glow-accent {
-  box-shadow: 0 0 20px rgba(91, 106, 240, 0.15);
-}
-
-/* Meter bars */
-.meter-bar { height: 4px; border-radius: 2px; background: #1E2028; overflow: hidden; }
-.meter-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }

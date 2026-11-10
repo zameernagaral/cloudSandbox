@@ -6,8 +6,9 @@ import secrets
 from functools import lru_cache
 from typing import Any
 
-from pydantic import AnyHttpUrl, Field, PostgresDsn, RedisDsn, field_validator
+from pydantic import AnyHttpUrl, Field, PostgresDsn, RedisDsn, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing_extensions import Self
 
 
 class Settings(BaseSettings):
@@ -71,6 +72,15 @@ class Settings(BaseSettings):
 
     # ── Killswitch ────────────────────────────────────────────────────────────
     killswitch_check_interval_ms: int = 100
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> Self:
+        if self.environment == "production":
+            if not self.encryption_key:
+                raise ValueError("ENCRYPTION_KEY must be provided in production")
+            if not self.secret_key or len(self.secret_key) < 32:
+                raise ValueError("SECRET_KEY must be at least 32 characters in production")
+        return self
 
 
 @lru_cache

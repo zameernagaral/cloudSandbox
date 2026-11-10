@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.db.models import RefreshToken, User, UserQuota
+from app.db.models import PasswordResetToken, RefreshToken, User, UserQuota
 from app.schemas.auth import TokenResponse
 
 settings = get_settings()
@@ -142,3 +142,64 @@ async def get_or_create_github_user(github_code: str, db: AsyncSession) -> User:
             user.github_id = github_id
             user.avatar_url = profile.get("avatar_url")
     return user
+
+
+async def revoke_refresh_token(raw_refresh: str, db: AsyncSession) -> bool:
+    """Revokes a refresh token immediately."""
+    token_hash = hashlib.sha256(raw_refresh.encode()).hexdigest()
+    result = await db.execute(
+        select(RefreshToken).where(RefreshToken.token_hash == token_hash, RefreshToken.revoked == False)  # noqa: E712
+    )
+    rt = result.scalar_one_or_none()
+    if rt:
+        rt.revoked = True
+        return True
+    return False
+
+
+async def create_password_reset_token(email: str, db: AsyncSession) -> str | None:
+    """Generates a single-use 15-minute reset token for the given user, or returns None if user not found."""
+    result = await db.execute(select(User).where(User.email == email, User.is_active == True))  # noqa: E712
+    user = result.scalar_one_or_none()
+    if not user:
+        return None
+
+    raw_token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+    expires_at = datetime.now(UTC) + timedelta(minutes=15)
+
+    reset_entry = PasswordResetToken(
+        user_id=user.id,
+        token_hash=token_hash,
+        expires_at=expires_at,
+        used=False,
+    )
+    db.add(reset_entry)
+    return raw_token
+
+
+async def reset_password_with_token(token: str, new_password: str, db: AsyncSession) -> bool:
+    """Validates token and updates user password hash. Enforces single-use."""
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    result = await db.execute(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token_hash == token_hash,
+            PasswordResetToken.used == False,  # noqa: E712
+            PasswordResetToken.expires_at > datetime.now(UTC),
+        )
+    )
+    entry = result.scalar_one_or_none()
+    if not entry:
+        return False
+
+    entry.used = True
+    user_result = await db.execute(select(User).where(User.id == entry.user_id))
+    user = user_result.scalar_one()
+    user.password_hash = hash_password(new_password)
+    return True
+
+
+async def delete_user_account_and_data(user: User, db: AsyncSession) -> None:
+    """Cascading deletion of user account and associated sandbox metadata."""
+    await db.delete(user)
+

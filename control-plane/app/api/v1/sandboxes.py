@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,13 +38,18 @@ async def _get_host_or_error(host_id: str | None, db: AsyncSession) -> Host:
 
 @router.get("", response_model=list[SandboxOut])
 async def list_sandboxes(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[Sandbox]:
+    offset = (page - 1) * page_size
     result = await db.execute(
         select(Sandbox)
         .where(Sandbox.owner_id == current_user.id, Sandbox.state != SandboxState.DESTROYED)
         .order_by(Sandbox.created_at.desc())
+        .offset(offset)
+        .limit(page_size)
     )
     return list(result.scalars().all())
 

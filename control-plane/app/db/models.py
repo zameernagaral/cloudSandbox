@@ -93,7 +93,23 @@ class User(Base):
         "LLMCredential", back_populates="user"
     )
     refresh_tokens: Mapped[list[RefreshToken]] = relationship("RefreshToken", back_populates="user")
+    password_reset_tokens: Mapped[list[PasswordResetToken]] = relationship(
+        "PasswordResetToken", back_populates="user"
+    )
     quota: Mapped[Optional[UserQuota]] = relationship("UserQuota", back_populates="user", uselist=False)
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    user: Mapped[User] = relationship("User", back_populates="password_reset_tokens")
 
 
 class RefreshToken(Base):

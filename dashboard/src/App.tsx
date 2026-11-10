@@ -7,6 +7,10 @@ import { Onboarding } from './pages/Onboarding'
 import { Dashboard } from './pages/Dashboard'
 import { SandboxDetail } from './pages/SandboxDetail'
 import { Settings } from './pages/Settings'
+import { RogueAgentDemo } from './pages/RogueAgentDemo'
+import { StyleTile } from './pages/StyleTile'
+import { AdminLogin } from './pages/admin/AdminLogin'
+import { AdminPanel } from './pages/admin/AdminPanel'
 import { AppLayout } from './components/layout/AppLayout'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -25,8 +29,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<RedirectIfAuth><Landing /></RedirectIfAuth>} />
+        {/* Public Landing & Interactive Demo */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/demo" element={<RogueAgentDemo />} />
+        <Route path="/style-tile" element={<StyleTile />} />
         
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminPanel />} />
+
         {/* Auth routes */}
         <Route path="/auth/login" element={<RedirectIfAuth><Login /></RedirectIfAuth>} />
         <Route path="/auth/register" element={<RedirectIfAuth><Register /></RedirectIfAuth>} />
