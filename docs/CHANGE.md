@@ -1,52 +1,65 @@
-# Change Specification: Integrate Interactive Demo into Home Page with Scroll-Expanding Terminal
+# Change Specification: Asymmetric Technical Architecture Breakdown (Fix 2 of 3)
 
 ## 1. Goal (One Sentence)
-Embed the interactive Rogue Agent Simulator directly into the home page using a scroll-driven expanding terminal transition from the hero background, and redirect the standalone `/demo` route to the home page demo section.
+Redesign Section 2 ("Technical Architecture & Defense-in-Depth") in `dashboard/src/pages/Landing.tsx` to replace the generic 3-card icon grid with an asymmetric, high-density engineering breakdown that showcases KVM hypervisor boundaries, real-time token metering, and egress domain filtering.
 
 ## 2. Classification
-**FRONTEND FEATURE or FLOW** — combining the hero ambient stage with the interactive simulator flow on the landing page, and redirecting `/demo` to `/#demo`.
+**LAYOUT / ARCHITECTURE** — transforming SaaS-boilerplate feature cards into an authentic systems-engineering proof layout.
 
-## 3. Documentation Status
-- `docs/WIREFRAMES.md`: Updated Section 1 to document the scroll-expanding terminal stage transitioning from the hero into the full interactive simulation console.
-- `docs/COPY.md`: UI copy for scenario controls, telemetry metrics, and terminal logs aligned with existing specifications.
-- `docs/TOKENS.md`: Design tokens for industrial slate surfaces and crisp 1px borders applied throughout.
+## 3. Session Context
+This is **Fix 2 of 3** from the critique:
+- **Fix 1 (Previous Session):** Localized contrast mask behind hero text block (Merged into `dev`).
+- **Fix 2 (Current Session):** Asymmetric technical breakdown for Section 2 (replacing 3 identical cards).
+- **Fix 3 (Next Session):** Static poster default on mobile viewports to prevent video aborts.
 
-## 4. File Boundaries
+## 4. Documentation Status
+- `docs/WIREFRAMES.md`: Updated Section 2 to document the 7-col / 5-col asymmetric architecture proof.
+- `docs/TOKENS.md`: Utilizing armored slate (`#161B26`), chisel rules (`#2B3448`), and chalk white (`#F1F5F9`).
+
+## 5. File Boundaries
 ### Exact Files Allowed to Edit:
+- `docs/CHANGE.md`
 - `docs/WIREFRAMES.md`
-- `dashboard/src/App.tsx` (redirect `/demo` route to `/#demo` on home page)
-- `dashboard/src/components/demo/InteractiveSimulator.tsx` (modular simulator component extracted and styled cleanly)
-- `dashboard/src/components/hero/HeroChamber.tsx` (scroll-connected terminal preview layer)
-- `dashboard/src/pages/Landing.tsx` (integrating scroll-driven expanding terminal stage and simulator section)
-- `dashboard/src/pages/RogueAgentDemo.tsx` (deprecated or re-exporting redirect)
+- `dashboard/src/pages/Landing.tsx`
 
 ### Files That Must NOT Be Touched:
-- `control-plane/**` (all backend Python files, database, auth, APIs)
+- `control-plane/**` (all backend Python files, database, APIs)
 - `dashboard/src/api/**`
-- `dashboard/src/pages/Auth.tsx`
-- `dashboard/src/pages/Dashboard.tsx`
-- `dashboard/src/pages/SandboxDetail.tsx`
-- `dashboard/src/pages/Settings.tsx`
-- `docs/SECURITY.md`, `docs/TOKENS.md`
+- `dashboard/src/components/hero/**`
+- `dashboard/src/components/demo/**`
+- `docs/SECURITY.md`, `docs/TOKENS.md`, `docs/HERO.md`
 
-## 5. Blast Radius
-- Links previously directing to `/demo` (`Launch demo` button in header, `Test run rogue agent` CTA in hero, footer links) now anchor directly to `/#demo` on the home page.
-- Home page bundle includes the interactive simulation logic previously loaded on `/demo`.
-- No backend API contracts or authenticated routes are altered.
+## 6. Blast Radius
+- Restricted exclusively to `#architecture-proof` inside `dashboard/src/pages/Landing.tsx`.
+- No impact on routing, simulator state, or hero playback.
 
-## 6. Failure States & Edge Cases
-1. **Reduced Motion (`prefers-reduced-motion: reduce`):** Scroll scaling transforms are disabled; the terminal renders at full 100% static width without scale transitions.
-2. **Mobile Viewports (<768px):** Terminal scales responsively to fit 100% viewport width with horizontal overflow containment on log lines.
-3. **Scroll Interpolation:** Scale smoothly clamps between initial hero preview (0.85 scale / compact view) and full deck (1.0 scale) based on scroll offset, preventing visual jitter.
-4. **Direct URL Access (`/demo`):** Automatically redirects to `/#demo` on the home page and smooth-scrolls to the active simulator.
+## 7. Layout Specification
+- **Desktop (≥1024px):** 12-column asymmetric grid (`lg:grid-cols-12 gap-6`).
+  - **Left Column (7 cols):** Deep-dive on **KVM Hypervisor & Kernel Boundary Layer**.
+    - MicroVM containment chamber breakdown:
+    - `/dev/kvm` hardware virtualization + dedicated Linux 5.10 kernel.
+    - Jailer security layers: `chroot` root jail, `cgroups v2` memory/CPU ceilings, `seccomp-bpf` filter blocking 270+ unneeded syscalls.
+    - Hardware vsock boundary (`vsock:cid 3:1024`) preventing host networking crosstalk.
+    - Visual layer stack: Guest Agent Process → Isolated MicroVM Kernel → Chroot Jailer → Bare-metal KVM Hypervisor.
+  - **Right Column (5 cols, stacked):**
+    - **Card A (Top): Sub-Second Token Cost Ceiling & Kernel Interceptor**:
+      - Real-time token rate limiter stream (`Redis Streams` + host gateway proxy).
+      - Sub-second microVM freeze latency (`<50ms` pause trip via Firecracker API).
+      - Active metric readout and code/state callout.
+    - **Card B (Bottom): Egress Domain Whitelist & Injected Key Proxy**:
+      - Outbound API routing matrix:
+        - `api.openai.com:443` -> ALLOWED (Injected at host proxy; zero keys on guest disk).
+        - `api.anthropic.com:443` -> ALLOWED (Ephemeral AES-256 header injection).
+        - `* (RFC 1918 & arbitrary IPs)` -> DROPPED (Immediate RST / kernel packet drop).
+- **Mobile (<1024px):** Single-column stacked blocks with clear visual hierarchy.
 
-## 7. Acceptance Tests
-1. Navigating to `/demo` redirects cleanly to the home page (`/` or `/#demo`).
-2. Terminal console begins in the hero viewport in front of the ambient background.
-3. Scrolling down dynamically enlarges the terminal to full width, revealing the complete interactive simulator (scenario selection, cost cap slider, microVM controls, telemetry meters, and live stdout).
-4. All existing landing sections (Header, Architecture Proof, Quick Start, Footer) remain rendered in proper order.
-5. `npm run type-check` and `npm run build` pass with 0 errors.
-6. `npm test` unit tests pass.
+## 8. Acceptance Tests
+1. Section 2 eliminates the 3 identical icon card repetition.
+2. Layout renders an asymmetric 7-col / 5-col split on desktop and 1-column on mobile.
+3. Accurate systems terminology (KVM, chroot, cgroups v2, seccomp-bpf, vsock CID, Redis Streams token metering, proxy key injection).
+4. `npm run type-check` and `npm run build` pass with 0 errors.
+5. Unit tests (`node --test tests/*.test.mjs`) pass.
+6. Playwright screenshot verification on desktop (1440px) and mobile (390px).
 
-## 8. Rollback Procedure
-Run `git checkout dev -- dashboard/ docs/WIREFRAMES.md`.
+## 9. Rollback Procedure
+Run `git checkout dev -- dashboard/src/pages/Landing.tsx docs/WIREFRAMES.md docs/CHANGE.md`.

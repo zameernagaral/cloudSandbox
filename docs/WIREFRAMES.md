@@ -151,22 +151,29 @@ Aesthetic: Industrial containment bulkhead — tactile mechanical framing, struc
 ```
 
 ### Section 2: Technical Architecture & Defense-in-Depth
-* **Desktop (1440px):** 3-column grid (`grid-cols-3 gap-6`), 1px chisel framing (`border-rule-frame`), slate bulkheads (`bg-surface-bulkhead`).
-* **Mobile (390px):** 1-column stacked cards (`grid-cols-1 gap-4`).
-* **Tokens:** Surface `#161B26`, Border `#2B3448`, Icons `#F59E0B`, Text `#F1F5F9` & `#94A3B8`.
+* **Desktop (1440px):** Asymmetric 12-column grid (`lg:grid-cols-12 gap-6`).
+  * **Col 1–7 (Primary):** KVM Hypervisor & MicroVM Containment Stack (hardware virtualization, Linux 5.10 kernel, chroot jailer, cgroups v2, seccomp syscall filtering, vsock bus).
+  * **Col 8–12 (Secondary Stack):** Two stacked high-density telemetry cards:
+    1. Sub-second Token Cost Ceiling & Kernel Interceptor (real-time token metering, <50ms Firecracker pause latency).
+    2. Outbound Domain Whitelist & Injected Key Proxy (outbound firewall routing matrix, zero keys on disk).
+* **Mobile (390px):** Single-column stacked cards (`grid-cols-1 gap-6`).
+* **Tokens:** Surface `#161B26`, Border `#2B3448`, Monospace labels `#94A3B8`, Primary text `#F1F5F9`.
 
 ```
-Desktop (1440px)
-+-----------------------------------+ +-----------------------------------+ +-----------------------------------+
-| [LOCK ICON]                       | | [LIGHTNING ICON]                  | | [SHIELD ICON]                     |
-| KVM hypervisor boundaries         | | Sub-second cost ceiling           | | Outbound domain whitelist         |
-|                                   | |                                   | |                                   |
-| Runs code in dedicated microVMs   | | The host proxy meters prompt and  | | Network traffic is restricted to  |
-| with Linux cgroups, chroot        | | completion tokens per millisecond.| | approved APIs (such as            |
-| jailers, and individual kernels.  | | If spending exceeds your threshold| | api.openai.com). API keys are     |
-| A container breakout cannot       | | the microVM is paused immediately.| | injected at the proxy and never   |
-| compromise the host.              | |                                   | | written to the guest disk.        |
-+-----------------------------------+ +-----------------------------------+ +-----------------------------------+
+Desktop (1440px) - Asymmetric 7 / 5 Split
++-------------------------------------------------------+ +--------------------------------------------+
+| [PRIMARY: 7 COLS] KVM HYPERVISOR BOUNDARIES           | | [SECONDARY TOP: 5 COLS] COST CEILING       |
+| Hardware-Enforced Linux MicroVM Isolation             | | Real-Time Token Interceptor                |
+|                                                       | | Rate: 1,420 tok/sec | Trip Latency: <50ms  |
+| [Layer 4: Untrusted Agent Process]                    | | Host gateway meters prompt/completion API  |
+| [Layer 3: Dedicated Linux 5.10 Kernel (cgroups v2)]   | | calls. Trips Firecracker pause under budget|
+| [Layer 2: Chroot Jailer & Seccomp Syscall Filter]     | +--------------------------------------------+
+| [Layer 1: Bare-Metal KVM Hypervisor (/dev/kvm)]       | | [SECONDARY BTM: 5 COLS] DOMAIN WHITELIST   |
+|                                                       | | Zero-Trust Outbound Proxy Matrix           |
+| Hardware Root: Container breakout cannot reach host   | | api.openai.com:443      -> [ALLOWED / INJ] |
+| Vsock: cid 3:1024 (Zero host network crosstalk)       | | api.anthropic.com:443   -> [ALLOWED / INJ] |
++-------------------------------------------------------+ | * (RFC 1918 / 0.0.0.0)  -> [DROPPED / RST] |
+                                                          +--------------------------------------------+
 ```
 
 ---

@@ -54,7 +54,8 @@ You have supplied verified, bespoke footage specifically tailored to this produc
   * The video attaches dynamically after `DOMContentLoaded` or through native `<video poster="hero-poster.png">`, guaranteeing zero visual flash.
 * **Scroll Behaviour:**
   * An `IntersectionObserver` monitors the hero container: when the user scrolls down to read the architecture proof, the video automatically pauses, consuming **0% CPU** while off-screen.
-* **Styling (No AI Slop):**
+* **Styling & Text Legibility:**
+  * Localized Text Contrast Scrim: A soft obsidian backdrop mask (`bg-[#0B0D13]/70 backdrop-blur-[2px] border border-white/5 rounded-lg`) frames the centered headline and subhead copy. This guarantees WCAG AAA text contrast against the glowing code plane beneath, while leaving the 3D cube and floating particles unobstructed across the rest of the canvas.
   * Pure industrial minimalism: no purple/orange glowing flares or diffuse drop-shadows. Clean hairline borders (`border-rule-frame` / `#2B3448`), crisp chalk-white headings (`#F1F5F9`), and muted industrial steel gray metadata (`#94A3B8`).
 
 ---

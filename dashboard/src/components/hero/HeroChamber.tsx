@@ -156,7 +156,8 @@ export function HeroChamber() {
           <span>Firecracker v1.7.0 kernel isolation</span>
         </div>
 
-        <div className="space-y-4">
+        {/* Localized Contrast Scrim: Frames headline and subhead against glowing 3D code plane */}
+        <div className="space-y-4 max-w-3xl mx-auto p-6 sm:p-8 rounded-xl bg-[#0B0D13]/70 backdrop-blur-sm border border-white/[0.06] shadow-bulkhead">
           <h1
             id="hero-heading"
             className="font-display font-bold text-3xl sm:text-5xl lg:text-6xl tracking-tight text-ink-primary leading-[1.12]"
