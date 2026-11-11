@@ -46,9 +46,8 @@ You have supplied verified, bespoke footage specifically tailored to this produc
   * Spans the full hero container as an edge-to-edge ambient background with a subtle dark obsidian scrim (`rgba(11, 13, 19, 0.78)`).
   * Video plays seamlessly behind centered headline copy and a horizontal telemetry deck with `muted`, `playsinline`, `loop`, and `autoplay`.
   * Real-time hardware readouts (vCPU, RAM, burn velocity, vsock path) and the emergency stop latch span horizontally in a slim containment command deck.
-* **Mobile (390px):**
-  * Spans the full hero section background, with centered typography and a vertically-stacked mobile telemetry deck.
-  * Uses `hero-scrub.mp4` or stays on `hero-poster.png` to conserve mobile data.
+* **Mobile (<768px):**
+  * Strictly defaults to `hero-poster.png` on viewports <768px. Video element is excluded from mobile DOM rendering (`hidden md:block`) and script attachment is bypassed completely (zero video network requests). This eliminates mobile video decode aborts (`net::ERR_ABORTED`), saves cellular bandwidth, and eliminates GPU decode battery consumption.
 * **First Load (LCP Optimization):**
   * The `hero-poster.png` displays immediately with the initial HTML paint (<50ms).
   * The video attaches dynamically after `DOMContentLoaded` or through native `<video poster="hero-poster.png">`, guaranteeing zero visual flash.
