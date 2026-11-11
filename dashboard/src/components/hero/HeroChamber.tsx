@@ -13,7 +13,13 @@ export function HeroChamber() {
       return
     }
 
-    // 2. Save-Data & slow connection check
+    // 2. Mobile viewport check (<768px): Enforce pure static poster default
+    // Eliminates mobile net::ERR_ABORTED decode failures and GPU battery drain
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      return
+    }
+
+    // 3. Save-Data & slow connection check
     const conn = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string; downlink?: number } }).connection
     if (conn) {
       if (conn.saveData) return
@@ -29,13 +35,15 @@ export function HeroChamber() {
     const attachVideo = () => {
       if (cancelled || !video) return
 
-      const isMobile = window.matchMedia('(max-width: 767px)').matches
+      // Double-check mobile viewport before attaching
+      if (window.matchMedia('(max-width: 767px)').matches) {
+        return
+      }
+
       const basePath = '/hero/'
       let targetSrc: string
 
-      if (isMobile) {
-        targetSrc = basePath + 'hero-scrub.mp4'
-      } else if (video.canPlayType('video/webm; codecs="vp9"')) {
+      if (video.canPlayType('video/webm; codecs="vp9"')) {
         targetSrc = basePath + 'hero-720.webm'
       } else {
         targetSrc = basePath + 'hero-1080.mp4'
@@ -123,7 +131,7 @@ export function HeroChamber() {
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
 
-        {/* Ambient Video Loop */}
+        {/* Ambient Video Loop (Desktop only: hidden on mobile <768px to enforce static poster default) */}
         <video
           ref={videoRef}
           muted
@@ -134,7 +142,7 @@ export function HeroChamber() {
           onError={() => setHasError(true)}
           onPlaying={() => setIsPlaying(true)}
           aria-label="MicroVM autonomous code execution stream"
-          className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-slow ease-mechanical ${
+          className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-slow ease-mechanical hidden md:block ${
             isPlaying && !hasError ? 'opacity-100' : 'opacity-0'
           }`}
         />
