@@ -208,7 +208,7 @@ export function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2 bg-bg-base border border-rule-frame rounded-sm px-3 py-2 font-mono text-xs shrink-0 max-w-full overflow-x-auto">
-            <code className="text-emerald-300 whitespace-nowrap">{cliDeployCmd}</code>
+            <code className="text-emerald-400 whitespace-nowrap">{cliDeployCmd}</code>
             <button
               type="button"
               onClick={handleCopyCli}
@@ -232,19 +232,19 @@ export function Dashboard() {
         </div>
         <div className="card p-5">
           <div className="text-xs text-ink-muted uppercase tracking-wider font-mono">Killswitch Frozen</div>
-          <div className="text-3xl font-bold text-cyan-400 mt-1">{frozenCount}</div>
+          <div className="text-3xl font-bold text-ink-primary mt-1">{frozenCount}</div>
         </div>
         <div className="card p-5">
           <div className="text-xs text-ink-muted uppercase tracking-wider font-mono">Total API Spend</div>
-          <div className="text-3xl font-bold font-mono text-amber-400 mt-1">${totalCost.toFixed(4)}</div>
+          <div className="text-3xl font-bold font-mono text-ink-primary mt-1">${totalCost.toFixed(4)}</div>
         </div>
       </div>
 
       {/* Host Status Notice if zero hosts */}
       {!hosts?.length && !isLoading && (
-        <div className="card p-5 border-amber-500/40 bg-amber-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="card p-5 border-white/25 bg-surface-elevated flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Server className="w-8 h-8 text-amber-400 shrink-0" />
+            <Server className="w-8 h-8 text-ink-primary shrink-0" />
             <div>
               <h3 className="font-semibold text-base text-ink-primary">No KVM host node registered</h3>
               <p className="text-sm text-ink-muted">Register a KVM node in Settings or run `./sandboxctl host init`.</p>
@@ -283,7 +283,7 @@ export function Dashboard() {
               <div
                 key={sb.id}
                 className={`card p-5 flex flex-col justify-between transition-all ${
-                  isFrozen ? 'border-cyan-500/50 bg-cyan-950/10' : 'hover:border-slate-500'
+                  isFrozen ? 'border-white/35 bg-surface-elevated/40' : 'hover:border-white/30'
                 }`}
               >
                 <div>
@@ -297,7 +297,7 @@ export function Dashboard() {
                           {sb.name}
                         </Link>
                         {sb.is_demo && (
-                          <span className="text-xs font-mono font-medium px-2 py-0.5 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded-sm shrink-0">
+                          <span className="text-xs font-mono font-medium px-2 py-0.5 bg-surface-elevated text-ink-muted border border-rule-frame rounded-sm shrink-0">
                             DEMO
                           </span>
                         )}
@@ -309,9 +309,9 @@ export function Dashboard() {
 
                   {/* Frozen Callout */}
                   {isFrozen && (
-                    <div className="mb-4 p-3 rounded-sm bg-cyan-950/50 border border-cyan-500/40 text-xs text-cyan-200">
-                      <div className="font-semibold flex items-center gap-1.5 text-cyan-300">
-                        <Zap className="w-4 h-4 shrink-0" /> Killswitch Triggered
+                    <div className="mb-4 p-3 rounded-sm bg-bg-base border border-white/25 text-xs text-ink-muted">
+                      <div className="font-semibold flex items-center gap-1.5 text-ink-primary">
+                        <Zap className="w-4 h-4 text-emerald-400 shrink-0" /> Killswitch Triggered
                       </div>
                       <div className="mt-1 leading-snug">
                         {sb.trip_reason || 'Cost limit reached'}
@@ -356,9 +356,9 @@ export function Dashboard() {
                           type="button"
                           disabled={isBusy}
                           onClick={(e) => handleRunScenario(e, sb, 'loop')}
-                          className="btn-secondary flex-1 justify-center text-xs px-3 py-2 min-h-[36px] text-amber-300 border-amber-500/35"
+                          className="btn-secondary flex-1 justify-center text-xs px-3 py-2 min-h-[36px]"
                         >
-                          <Zap className="w-3.5 h-3.5" /> Run Rogue Loop
+                          <Zap className="w-3.5 h-3.5 text-emerald-400" /> Run Rogue Loop
                         </button>
                         <button
                           type="button"
@@ -377,7 +377,7 @@ export function Dashboard() {
                         type="button"
                         disabled={isBusy}
                         onClick={(e) => handleResume(e, sb)}
-                        className="btn-secondary flex-1 justify-center text-xs px-3 py-2 min-h-[36px] text-emerald-300 border-emerald-500/40"
+                        className="btn-secondary flex-1 justify-center text-xs px-3 py-2 min-h-[36px] text-emerald-400 border-emerald-500/40"
                       >
                         <Play className="w-3.5 h-3.5" /> Raise Cap (+$0.05) &amp; Resume
                       </button>
@@ -387,7 +387,7 @@ export function Dashboard() {
                       type="button"
                       disabled={isBusy}
                       onClick={(e) => handleDestroy(e, sb)}
-                      className="btn-secondary px-2.5 py-2 min-h-[36px] text-red-300 hover:bg-red-500/15"
+                      className="btn-secondary px-2.5 py-2 min-h-[36px] text-ink-muted hover:text-ink-primary"
                       title="Destroy Sandbox"
                       aria-label={`Destroy ${sb.name}`}
                     >
@@ -424,7 +424,7 @@ export function Dashboard() {
 
             <div>
               <h2 className="text-xl font-display font-bold text-ink-primary flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-amber-400" />
+                <Terminal className="w-5 h-5 text-emerald-400" />
                 Launch New Firecracker MicroVM
               </h2>
               <p className="text-sm text-ink-muted mt-1">

@@ -152,11 +152,11 @@ export function HeroChamber() {
         />
 
         {/* Subtle Dark Contrast Scrim */}
-        <div className="absolute inset-0 bg-[#0B0D13]/65" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[#090B10]/70" aria-hidden="true" />
 
         {/* Bottom-Right Watermark Cover Mask (ensures the bottom-right video watermark is never visible) */}
         <div
-          className="absolute right-0 bottom-0 w-72 h-48 bg-[radial-gradient(circle_at_72%_72%,#0B0D13_55%,rgba(11,13,19,0.96)_72%,transparent_100%)]"
+          className="absolute right-0 bottom-0 w-72 h-48 bg-[radial-gradient(circle_at_72%_72%,#090B10_55%,rgba(9,11,16,0.96)_72%,transparent_100%)]"
           aria-hidden="true"
         />
       </div>
@@ -169,7 +169,7 @@ export function HeroChamber() {
         </div>
 
         {/* Localized Contrast Scrim: High readability over glowing 3D code plane */}
-        <div className="space-y-5 max-w-3xl mx-auto p-6 sm:p-8 rounded-xl bg-[#0B0D13]/80 backdrop-blur-sm border border-white/10 shadow-bulkhead">
+        <div className="space-y-5 max-w-3xl mx-auto p-6 sm:p-8 rounded-xl bg-[#090B10]/85 backdrop-blur-sm border border-white/10 shadow-bulkhead">
           <h1
             id="hero-heading"
             className="font-display font-bold text-3xl sm:text-5xl lg:text-6xl tracking-tight text-ink-primary leading-[1.12]"

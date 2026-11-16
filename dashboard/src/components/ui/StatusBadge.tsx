@@ -13,12 +13,12 @@ export function StatusBadge({ state }: { state: SandboxState }) {
     ERROR: 'badge-error',
   }
   const dotColors: Record<SandboxState, string> = {
-    RUNNING: 'bg-success animate-pulse',
-    FROZEN: 'bg-frozen animate-pulse',
-    STOPPED: 'bg-muted',
-    CREATING: 'bg-warning animate-pulse',
-    DESTROYED: 'bg-muted',
-    ERROR: 'bg-danger animate-pulse',
+    RUNNING: 'bg-emerald-400 animate-pulse',
+    FROZEN: 'bg-ink-primary',
+    STOPPED: 'bg-ink-muted',
+    CREATING: 'bg-ink-primary animate-pulse',
+    DESTROYED: 'bg-ink-muted',
+    ERROR: 'bg-ink-primary',
   }
   return (
     <span className={classes[state]}>

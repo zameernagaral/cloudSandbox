@@ -5,23 +5,25 @@ Aesthetic: Industrial containment bulkhead — rugged precision, authentic mecha
 
 ---
 
-## 1. Colour
+## 1. Colour (Strict 3-Color System)
 
 ### Palette (Named Hex Values)
-* **`--color-bg-base`**: `#0B0D13` (Deep Obsidian Void — the main page background)
-* **`--color-surface-bulkhead`**: `#161B26` (Armored Slate — containment panel cards and terminal backgrounds)
-* **`--color-surface-elevated`**: `#1E2536` (Elevated Steel — hover states, interactive dropdowns, and drawer trays)
-* **`--color-rule-frame`**: `#2B3448` (Structural Chisel Rule — 1px division rules and panel containment boundaries)
-* **`--color-ink-primary`**: `#F1F5F9` (Chalk White — high-contrast headings, terminal stdout, and key telemetry numbers)
-* **`--color-ink-muted`**: `#94A3B8` (Industrial Steel Gray — labels, metadata descriptions, and socket paths)
-* **`--color-signal-hazard`**: `#F59E0B` (Safety Amber — 2% to 4% screen budget; warning caps, armed killswitches, active cost burn)
-* **`--color-signal-breach`**: `#EF4444` (Containment Red — reserve emergency accent; tripped killswitches, OOM alerts, destroyed VMs)
+1. **Color 1 — Dark Obsidian Neutrals (Canvas, Surfaces & Borders):**
+   * **`--color-bg-base`**: `#090B10` (Deep Obsidian Void — main page background)
+   * **`--color-surface-bulkhead`**: `#121620` (Armored Slate — panel cards and terminal backgrounds)
+   * **`--color-surface-elevated`**: `#1A202E` (Elevated Steel — hover states and interactive panels)
+   * **`--color-rule-frame`**: `#2A3244` (Structural Chisel Rule — 1px division rules and panel borders)
+2. **Color 2 — Chalk White & Soft Gray Ink (Text, Primary Actions & Frozen State):**
+   * **`--color-ink-primary`**: `#F8FAFC` (Chalk White — headings, primary buttons, key numbers, frozen state badges)
+   * **`--color-ink-muted`**: `#A8B3C5` (Soft Steel — labels, descriptions, secondary metadata)
+3. **Color 3 — Single Emerald Accent (Active / Live / Operational):**
+   * **`--color-accent`**: `#10B981` (Emerald — active/running status dots, live sync indicator, and key operational highlights)
 
 ### Usage Rules
-1. Background and surface colors must never use generic pure black (`#000000`) or flat navy (`#1E1E2E`); use `#0B0D13` to provide depth without washed-out grays.
-2. Zero AI-slop aesthetic: no purple accents, no orange/amber action buttons, and no colorful glowing drop-shadows or radial gradient blobs. Primary interactive elements use high-contrast chalk white (`#F1F5F9`) with dark text (`#0B0D13`).
-3. Every card and terminal panel must be framed with crisp 1px `--color-rule-frame` (`#2B3448`) to give the structural feel of precision-milled hardware bulkheads.
-4. Containment Red (`#EF4444`) is strictly reserved for tripped killswitch indicators, destructive teardown, and fatal error badges. Operational status uses subtle emerald (`#22C55E` / `#34D399`).
+1. Strictly **3 colors max** across the entire interface: Dark Obsidian neutrals, Chalk White/Gray ink, and a single Emerald accent (`#10B981`).
+2. Zero competing accent colors: no amber/orange, no cyan, no purple, and no glowing neon drop-shadows.
+3. Primary interactive buttons use high-contrast Chalk White (`#F8FAFC`) with dark text (`#090B10`).
+4. `RUNNING` states use Emerald (`#10B981`); `FROZEN` / `PAUSED` states use crisp inverted or bordered Chalk White (`#F8FAFC`) so states remain immediately distinguishable within 3 colors.
 
 ### Contrast Verification Matrix
 All pairs meet WCAG AA standards (minimum 4.5:1 for body text, 3:1 for large text and UI controls):
