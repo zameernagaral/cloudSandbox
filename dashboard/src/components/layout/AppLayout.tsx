@@ -80,10 +80,10 @@ export function AppLayout() {
 
               <a
                 href="/#demo"
-                className="px-3 py-2 rounded-sm text-sm font-medium text-amber-300 hover:bg-surface-elevated transition-colors whitespace-nowrap"
+                className="px-3 py-2 rounded-sm text-sm font-medium text-ink-muted hover:text-ink-primary hover:bg-surface-elevated transition-colors whitespace-nowrap"
               >
                 <span className="flex items-center gap-1.5">
-                  <Zap className="w-4 h-4" /> Simulator
+                  <Zap className="w-4 h-4 text-emerald-400" /> Simulator
                 </span>
               </a>
 
@@ -117,13 +117,13 @@ export function AppLayout() {
             <span
               className={`hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-mono border ${
                 backendOnline
-                  ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
-                  : 'bg-amber-500/15 border-amber-500/35 text-amber-300'
+                  ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-400'
+                  : 'bg-surface-elevated border-rule-frame text-ink-muted'
               }`}
               title={backendOnline ? 'Connected to live Control Plane on port 8000' : 'Control Plane offline (using local fallback)'}
             >
               <span
-                className={`w-2 h-2 rounded-full ${backendOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}
+                className={`w-2 h-2 rounded-full ${backendOnline ? 'bg-emerald-400 animate-pulse' : 'bg-ink-muted'}`}
               />
               {backendOnline ? 'Live Control Plane (:8000)' : 'Offline Fallback'}
             </span>
@@ -142,7 +142,7 @@ export function AppLayout() {
               onClick={handleLogout}
               title="Sign out"
               aria-label="Sign out"
-              className="p-2 text-ink-muted hover:text-red-300 hover:bg-red-500/10 rounded-sm transition-colors"
+              className="p-2 text-ink-muted hover:text-ink-primary hover:bg-surface-elevated rounded-sm transition-colors"
             >
               <LogOut className="w-4 h-4" />
             </button>

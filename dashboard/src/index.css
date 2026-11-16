@@ -24,7 +24,7 @@
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: var(--color-bg-base); }
   ::-webkit-scrollbar-thumb { background: var(--color-rule-frame); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  ::-webkit-scrollbar-thumb:hover { background: #3E4C63; }
 }
 
 @layer components {
@@ -36,14 +36,14 @@
   }
   .btn-secondary {
     @apply inline-flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-sm bg-surface-bulkhead border border-rule-frame 
-    text-ink-primary hover:bg-surface-elevated hover:border-slate-400 font-medium text-sm transition-colors duration-fast ease-mechanical
+    text-ink-primary hover:bg-surface-elevated hover:border-white/40 font-medium text-sm transition-colors duration-fast ease-mechanical
     focus:outline-none focus:ring-2 focus:ring-white/40
     disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-danger {
-    @apply inline-flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-sm bg-signal-breach/15 border border-signal-breach/50 
-    text-red-300 hover:bg-signal-breach/25 font-semibold text-sm transition-all duration-normal ease-mechanical
-    focus:outline-none focus:ring-2 focus:ring-red-400/60;
+    @apply inline-flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-sm bg-surface-elevated border border-white/30 
+    text-ink-primary hover:bg-ink-primary hover:text-bg-base font-semibold text-sm transition-all duration-fast ease-mechanical
+    focus:outline-none focus:ring-2 focus:ring-white/50;
   }
   .card {
     @apply bg-surface-bulkhead border border-rule-frame rounded-md shadow-bulkhead;
@@ -60,23 +60,23 @@
   }
   .badge-running {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-semibold 
-    bg-emerald-500/15 text-emerald-300 border border-emerald-500/35;
+    bg-emerald-500/15 text-emerald-400 border border-emerald-500/35;
   }
   .badge-frozen {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-semibold 
-    bg-cyan-500/15 text-cyan-300 border border-cyan-500/40;
+    bg-white/10 text-ink-primary border border-white/35;
   }
   .badge-stopped {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-medium 
-    bg-slate-700/40 text-ink-muted border border-rule-frame;
+    bg-surface-elevated text-ink-muted border border-rule-frame;
   }
   .badge-creating {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-medium 
-    bg-zinc-800 text-ink-primary border border-rule-frame;
+    bg-surface-elevated text-ink-primary border border-rule-frame;
   }
   .badge-error {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-medium 
-    bg-signal-breach/20 text-red-300 border border-signal-breach/40;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-semibold 
+    bg-white/15 text-ink-primary border border-white/40;
   }
 }
 
@@ -89,8 +89,8 @@
 .frozen-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(6, 182, 212, 0.08);
-  border: 2px solid rgba(6, 182, 212, 0.4);
+  background: rgba(248, 250, 252, 0.04);
+  border: 2px solid rgba(248, 250, 252, 0.35);
   border-radius: var(--radius-md);
   pointer-events: none;
   z-index: 10;

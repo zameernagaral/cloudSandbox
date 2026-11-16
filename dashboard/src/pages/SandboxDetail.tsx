@@ -176,7 +176,7 @@ export function SandboxDetail() {
                   type="button"
                   onClick={() => pauseMut.mutate()}
                   disabled={pauseMut.isPending}
-                  className="btn-secondary flex-1 justify-center text-amber-300 border-amber-500/40"
+                  className="btn-secondary flex-1 justify-center"
                 >
                   <Square className="w-4 h-4" /> Pause VM
                 </button>
@@ -186,7 +186,7 @@ export function SandboxDetail() {
                   type="button"
                   onClick={handleResume}
                   disabled={resumeMut.isPending}
-                  className="btn-primary flex-1 justify-center bg-emerald-500 hover:bg-emerald-400 text-bg-base"
+                  className="btn-primary flex-1 justify-center"
                 >
                   <Play className="w-4 h-4" /> Raise Cap &amp; Resume
                 </button>
@@ -208,15 +208,15 @@ export function SandboxDetail() {
 
           {/* Frozen Killswitch Explanation Banner */}
           {isFrozen && (
-            <div className="p-4 rounded-sm bg-cyan-950/60 border border-cyan-500/50 space-y-1.5">
-              <div className="flex items-center gap-2 text-cyan-300 font-semibold text-sm">
-                <Zap className="w-4 h-4 shrink-0" /> Killswitch Stopped This VM
+            <div className="p-4 rounded-sm bg-surface-elevated border border-white/30 space-y-1.5">
+              <div className="flex items-center gap-2 text-ink-primary font-semibold text-sm">
+                <Zap className="w-4 h-4 text-emerald-400 shrink-0" /> Killswitch Stopped This VM
               </div>
-              <div className="text-sm text-ink-primary leading-snug">
+              <div className="text-sm text-ink-muted leading-snug">
                 {sandbox.trip_reason || 'Spending limit reached.'}
               </div>
               {sandbox.trip_to_pause_latency_ms && (
-                <div className="text-xs text-cyan-200 flex items-center gap-1.5 font-mono pt-1">
+                <div className="text-xs text-emerald-400 flex items-center gap-1.5 font-mono pt-1">
                   <Clock className="w-3.5 h-3.5" /> Freeze Latency: {sandbox.trip_to_pause_latency_ms.toFixed(1)}ms
                 </div>
               )}
@@ -271,7 +271,7 @@ export function SandboxDetail() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-ink-primary flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-amber-400" />
+                <Terminal className="w-4 h-4 text-emerald-400" />
                 Run Tests or Linux Commands Inside This MicroVM
               </h2>
               <p className="text-xs text-ink-muted mt-0.5">
@@ -311,25 +311,25 @@ export function SandboxDetail() {
               type="button"
               disabled={!isRunning || runMut.isPending}
               onClick={() => runMut.mutate('loop')}
-              className="btn-secondary text-xs px-3 py-1.5 min-h-[34px] text-amber-300 border-amber-500/40"
+              className="btn-secondary text-xs px-3 py-1.5 min-h-[34px]"
             >
-              <Zap className="w-3.5 h-3.5" /> Run Rogue Loop
+              <Zap className="w-3.5 h-3.5 text-emerald-400" /> Run Rogue Loop
             </button>
             <button
               type="button"
               disabled={!isRunning || runMut.isPending}
               onClick={() => runMut.mutate('burst')}
-              className="btn-secondary text-xs px-3 py-1.5 min-h-[34px] text-red-300 border-red-500/40"
+              className="btn-secondary text-xs px-3 py-1.5 min-h-[34px]"
             >
-              <Activity className="w-3.5 h-3.5" /> Run Cost Surge
+              <Activity className="w-3.5 h-3.5 text-ink-primary" /> Run Cost Surge
             </button>
             <button
               type="button"
               disabled={!isRunning || runMut.isPending}
               onClick={() => runMut.mutate('safe')}
-              className="btn-secondary text-xs px-3 py-1.5 min-h-[34px] text-emerald-300 border-emerald-500/40"
+              className="btn-secondary text-xs px-3 py-1.5 min-h-[34px]"
             >
-              <CheckCircle2 className="w-3.5 h-3.5" /> Run Safe Task
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Run Safe Task
             </button>
 
             <span className="hidden sm:inline text-rule-frame mx-1">|</span>
@@ -343,7 +343,7 @@ export function SandboxDetail() {
                   setViewTab('logs')
                   runShellCommand(cmd)
                 }}
-                className="px-2.5 py-1.5 rounded-sm bg-bg-base border border-rule-frame text-xs font-mono text-ink-muted hover:text-ink-primary hover:border-slate-400"
+                className="px-2.5 py-1.5 rounded-sm bg-bg-base border border-rule-frame text-xs font-mono text-ink-muted hover:text-ink-primary hover:border-white/40"
               >
                 $ {cmd}
               </button>
@@ -352,7 +352,7 @@ export function SandboxDetail() {
         </div>
 
         {/* Terminal Viewport */}
-        <div className="flex-1 min-h-[420px] card p-0 overflow-hidden flex flex-col bg-[#0A0B0F]">
+        <div className="flex-1 min-h-[420px] card p-0 overflow-hidden flex flex-col bg-[#090B10]">
           {viewTab === 'logs' ? (
             <>
               <div
@@ -365,17 +365,17 @@ export function SandboxDetail() {
                     <span
                       className={
                         log.type === 'cmd'
-                          ? 'text-emerald-300 font-bold'
+                          ? 'text-emerald-400 font-bold'
                           : log.type === 'gateway'
-                          ? 'text-cyan-300'
+                          ? 'text-emerald-400'
                           : log.type === 'warning'
-                          ? 'text-amber-300 font-semibold'
+                          ? 'text-ink-primary font-semibold'
                           : log.type === 'killswitch'
-                          ? 'text-cyan-300 font-bold'
+                          ? 'text-ink-primary font-bold'
                           : log.type === 'success'
-                          ? 'text-emerald-300 font-semibold'
+                          ? 'text-emerald-400 font-semibold'
                           : log.type === 'agent'
-                          ? 'text-slate-100'
+                          ? 'text-ink-primary'
                           : 'text-ink-muted'
                       }
                     >

@@ -210,8 +210,8 @@ export function Landing() {
               <article className="card p-5 sm:p-6 bg-surface-bulkhead border border-rule-frame rounded-md shadow-bulkhead flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="inline-flex items-center gap-2 font-mono text-2xs text-amber-400 uppercase tracking-wider">
-                      <Zap className="w-3.5 h-3.5" aria-hidden="true" />
+                    <div className="inline-flex items-center gap-2 font-mono text-2xs text-ink-primary uppercase tracking-wider">
+                      <Zap className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
                       <span>Financial Safeguard</span>
                     </div>
                     <span className="font-mono text-2xs text-ink-muted border border-rule-frame px-1.5 py-0.5 rounded-sm bg-bg-base">
@@ -285,10 +285,10 @@ export function Landing() {
                   </div>
                   <div className="flex items-center justify-between gap-2 py-1">
                     <span className="text-ink-muted flex items-center gap-1.5 min-w-0 truncate">
-                      <XCircle className="w-3 h-3 text-red-400 shrink-0" aria-hidden="true" />
+                      <XCircle className="w-3 h-3 text-ink-muted shrink-0" aria-hidden="true" />
                       <span className="truncate">* (RFC 1918 / Arbitrary)</span>
                     </span>
-                    <span className="text-red-400 font-semibold shrink-0 text-right">DROPPED (RST)</span>
+                    <span className="text-ink-muted font-semibold shrink-0 text-right">DROPPED (RST)</span>
                   </div>
                 </div>
               </article>

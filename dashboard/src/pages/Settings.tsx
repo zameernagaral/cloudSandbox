@@ -126,7 +126,7 @@ export function Settings() {
       {/* LLM Credentials */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-amber-400" />
+          <Shield className="w-5 h-5 text-emerald-400" />
           <h2 className="text-lg font-semibold text-ink-primary">LLM Provider Keys (Encrypted Proxy Vault)</h2>
         </div>
         <p className="text-sm text-ink-muted">
@@ -179,7 +179,7 @@ export function Settings() {
       {/* API Keys */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <Key className="w-5 h-5 text-amber-400" />
+          <Key className="w-5 h-5 text-emerald-400" />
           <h2 className="text-lg font-semibold text-ink-primary">CLI Access Keys</h2>
         </div>
         <div className="card p-6 space-y-5">
@@ -237,7 +237,7 @@ export function Settings() {
                     onClick={() => {
                       if (confirm(`Revoke key "${k.name}"?`)) revokeKeyMut.mutate(k.id)
                     }}
-                    className="p-2 text-ink-muted hover:text-red-300 hover:bg-red-500/10 rounded-sm transition-colors"
+                    className="p-2 text-ink-muted hover:text-ink-primary hover:bg-surface-elevated rounded-sm transition-colors"
                     aria-label={`Revoke ${k.name}`}
                   >
                     <Trash2 className="w-4 h-4" />
