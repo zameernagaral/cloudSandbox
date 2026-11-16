@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware'
 import type { User } from '../api/types'
 import { mockUser } from '../api/mockData'
 
+export const DEFAULT_LIVE_DEMO_KEY = 'sk-live-cloud-sandbox-admin-key'
+
 interface AuthState {
   user: User | null
   accessToken: string | null
@@ -33,12 +35,12 @@ export const useAuthStore = create<AuthState>()(
         set({ demoMode: val })
       },
       loginAsDemo: () => {
-        localStorage.setItem('access_token', 'demo-token-cloud-sandbox')
+        localStorage.setItem('access_token', DEFAULT_LIVE_DEMO_KEY)
         set({
           user: mockUser,
-          accessToken: 'demo-token-cloud-sandbox',
+          accessToken: DEFAULT_LIVE_DEMO_KEY,
           refreshToken: 'demo-refresh-token',
-          demoMode: true,
+          demoMode: false,
         })
       },
     }),

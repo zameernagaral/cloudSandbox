@@ -1,38 +1,30 @@
-"""Prometheus metrics for the control plane."""
+"""Prometheus-compatible metrics endpoint using live SQLite stats."""
 
 from __future__ import annotations
 
-from prometheus_client import Counter, Gauge, Histogram, CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
 from fastapi import APIRouter
 from fastapi.responses import Response
 
-registry = CollectorRegistry()
-
-sandbox_created_total = Counter(
-    "sandbox_created_total", "Total sandboxes created", registry=registry
-)
-sandbox_frozen_total = Counter(
-    "sandbox_frozen_total", "Total killswitch trips", ["reason"], registry=registry
-)
-sandbox_active = Gauge(
-    "sandbox_active", "Currently active (running) sandboxes", registry=registry
-)
-killswitch_latency_ms = Histogram(
-    "killswitch_latency_ms",
-    "Time from policy trip to VM pause (ms)",
-    buckets=[10, 25, 50, 100, 250, 500, 1000, 2500],
-    registry=registry,
-)
-llm_tokens_total = Counter(
-    "llm_tokens_total", "Total LLM tokens processed", ["provider"], registry=registry
-)
-llm_cost_usd_total = Counter(
-    "llm_cost_usd_total", "Total estimated LLM cost in USD", ["provider"], registry=registry
-)
+from app.db import store
 
 router = APIRouter(tags=["observability"])
 
 
 @router.get("/metrics")
 async def metrics() -> Response:
-    return Response(generate_latest(registry), media_type=CONTENT_TYPE_LATEST)
+    stats = store.get_admin_overview_stats()
+    lines = [
+        "# HELP sandbox_total Total active/frozen microVM sandboxes",
+        "# TYPE sandbox_total gauge",
+        f"sandbox_total {stats['total_sandboxes']}",
+        "# HELP sandbox_frozen_total Total killswitch frozen microVMs",
+        "# TYPE sandbox_frozen_total gauge",
+        f"sandbox_frozen_total {stats['breached_sandboxes']}",
+        "# HELP sandbox_hosts_active Total active KVM hosts",
+        "# TYPE sandbox_hosts_active gauge",
+        f"sandbox_hosts_active {stats['active_hosts']}",
+        "# HELP llm_cost_usd_total Total metered LLM spend in USD",
+        "# TYPE llm_cost_usd_total counter",
+        f"llm_cost_usd_total {stats['total_spend_usd']}",
+    ]
+    return Response("\n".join(lines) + "\n", media_type="text/plain; version=0.0.4")

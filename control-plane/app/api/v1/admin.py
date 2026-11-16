@@ -6,19 +6,14 @@ import enum
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict
 
-from app.db.base import get_db
-from app.db.models import AuditEvent, Host, Policy, Sandbox, SandboxState, User
+from app.db import store
+from app.db.models import AuditEvent, User
 from app.middleware.auth import require_admin
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-
-
-# ── Schemas ───────────────────────────────────────────────────────────────────
 
 
 class AlertStatus(str, enum.Enum):
@@ -82,31 +77,11 @@ class AlertStatusUpdate(BaseModel):
     status: AlertStatus
 
 
-# ── Endpoints ─────────────────────────────────────────────────────────────────
-
-
 @router.get("/overview", response_model=AdminOverview)
 async def get_admin_overview(
     _admin: User = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
 ) -> AdminOverview:
-    user_count = (await db.execute(select(func.count(User.id)))).scalar() or 0
-    host_count = (await db.execute(select(func.count(Host.id)).where(Host.is_active == True))).scalar() or 0  # noqa: E712
-    sb_count = (await db.execute(select(func.count(Sandbox.id)))).scalar() or 0
-    breached_count = (
-        await db.execute(
-            select(func.count(Sandbox.id)).where(Sandbox.state == SandboxState.FROZEN)
-        )
-    ).scalar() or 0
-    total_spend = (await db.execute(select(func.coalesce(func.sum(Sandbox.total_cost_usd), 0.0)))).scalar() or 0.0
-
-    return AdminOverview(
-        total_users=user_count,
-        active_hosts=host_count,
-        total_sandboxes=sb_count,
-        breached_sandboxes=breached_count,
-        total_spend_usd=round(float(total_spend), 4),
-    )
+    return AdminOverview(**store.get_admin_overview_stats())
 
 
 @router.get("/users", response_model=list[AdminUserOut])
@@ -114,11 +89,8 @@ async def list_admin_users(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1, le=100),
     _admin: User = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
 ) -> list[User]:
-    offset = (page - 1) * page_size
-    result = await db.execute(select(User).order_by(User.created_at.desc()).offset(offset).limit(page_size))
-    return list(result.scalars().all())
+    return store.list_users(page=page, page_size=page_size)
 
 
 @router.patch("/users/{user_id}", response_model=AdminUserOut)
@@ -126,22 +98,15 @@ async def update_user_status(
     user_id: str,
     body: AdminUserUpdate,
     admin: User = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
 ) -> User:
     if user_id == admin.id and body.is_admin is False:
-        raise HTTPException(status_code=400, detail="Cannot revoke admin privileges from your own account")
-
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if not user:
+        raise HTTPException(
+            status_code=400, detail="Cannot revoke admin privileges from your own account"
+        )
+    updated = store.update_user(user_id, is_admin=body.is_admin, is_active=body.is_active)
+    if not updated:
         raise HTTPException(status_code=404, detail="User not found")
-
-    if body.is_admin is not None:
-        user.is_admin = body.is_admin
-    if body.is_active is not None:
-        user.is_active = body.is_active
-
-    return user
+    return updated
 
 
 @router.get("/audit-logs", response_model=list[AuditLogOut])
@@ -149,39 +114,12 @@ async def list_audit_logs(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
     _admin: User = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
 ) -> list[AuditEvent]:
-    offset = (page - 1) * page_size
-    result = await db.execute(select(AuditEvent).order_by(AuditEvent.created_at.desc()).offset(offset).limit(page_size))
-    return list(result.scalars().all())
+    return store.list_audit_events(page=page, page_size=page_size)
 
 
 @router.get("/alerts", response_model=list[BreachAlertOut])
 async def list_alerts(
     _admin: User = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
 ) -> list[BreachAlertOut]:
-    """Retrieves containment breach alerts from frozen or error sandboxes."""
-    result = await db.execute(
-        select(Sandbox, User)
-        .join(User, Sandbox.owner_id == User.id)
-        .where(Sandbox.state.in_([SandboxState.FROZEN, SandboxState.ERROR]))
-        .order_by(Sandbox.updated_at.desc() if hasattr(Sandbox, "updated_at") else Sandbox.created_at.desc())
-        .limit(50)
-    )
-    alerts = []
-    for sb, usr in result.all():
-        alerts.append(
-            BreachAlertOut(
-                id=f"alert-{sb.id[:8]}",
-                sandbox_id=sb.id,
-                sandbox_name=sb.name,
-                owner_email=usr.email,
-                reason=sb.trip_reason or "Cost cap threshold tripped",
-                cost_usd=sb.total_cost_usd,
-                status=AlertStatus.NEW,
-                created_at=sb.frozen_at or sb.created_at,
-            )
-        )
-    return alerts
-
+    return [BreachAlertOut(**row) for row in store.get_admin_breach_alerts()]

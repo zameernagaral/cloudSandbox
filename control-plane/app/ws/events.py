@@ -1,19 +1,13 @@
-"""
-Event stream WebSocket — pushes live meters and state changes to the dashboard.
-
-The client subscribes to /ws/events/{sandbox_id}?token=...
-The server fans out messages from the Redis pub/sub channel for that sandbox.
-"""
+"""Event stream WebSocket — pushes live meters and state changes to the dashboard."""
 
 from __future__ import annotations
 
 import asyncio
-import json
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
 
 from app.db.redis_client import get_redis, sandbox_pubsub_channel
-from app.ws.terminal import _authenticate  # reuse auth helper
+from app.ws.terminal import _authenticate
 
 router = APIRouter(tags=["events"])
 
@@ -27,7 +21,7 @@ async def events_ws(
     await websocket.accept()
 
     try:
-        _user, _sandbox = await _authenticate(token, sandbox_id)
+        _user, sandbox = await _authenticate(token, sandbox_id)
     except PermissionError as exc:
         await websocket.send_json({"type": "error", "message": str(exc)})
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
@@ -35,7 +29,7 @@ async def events_ws(
 
     redis = await get_redis()
     pubsub = redis.pubsub()
-    await pubsub.subscribe(sandbox_pubsub_channel(sandbox_id))
+    await pubsub.subscribe(sandbox_pubsub_channel(sandbox.id))
 
     async def relay() -> None:
         async for message in pubsub.listen():
@@ -59,4 +53,4 @@ async def events_ws(
     )
     for task in pending:
         task.cancel()
-    await pubsub.unsubscribe(sandbox_pubsub_channel(sandbox_id))
+    await pubsub.unsubscribe(sandbox_pubsub_channel(sandbox.id))

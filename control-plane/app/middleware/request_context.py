@@ -3,20 +3,20 @@
 from __future__ import annotations
 
 import json
+import logging
 import uuid
-from typing import Callable
+from typing import Any, Callable
 
-import structlog
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-log = structlog.get_logger()
+log = logging.getLogger("cloud_sandbox.request")
 
 MAX_BODY_SIZE_BYTES = 1024 * 1024  # 1 MB
 
 
-def _contains_forbidden_keys(obj: any) -> bool:
+def _contains_forbidden_keys(obj: Any) -> bool:
     """Recursively checks if any dictionary key contains '$' or '.'."""
     if isinstance(obj, dict):
         for k, v in obj.items():
@@ -38,10 +38,8 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         # 1. Request ID
         request_id = request.headers.get("x-request-id") or str(uuid.uuid4())
         request.state.request_id = request_id
-        structlog.contextvars.clear_contextvars()
-        structlog.contextvars.bind_contextvars(request_id=request_id)
 
-        # 2. Body size limit and forbidden key check for non-streaming requests
+        # 2. Body size limit and forbidden key check
         content_length = request.headers.get("content-length")
         if content_length and int(content_length) > MAX_BODY_SIZE_BYTES:
             return JSONResponse(
@@ -57,7 +55,6 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 headers={"X-Request-ID": request_id},
             )
 
-        # Inspect JSON body for $ or . operator injection if present
         content_type = request.headers.get("content-type", "")
         if "application/json" in content_type and request.method in ("POST", "PUT", "PATCH"):
             body_bytes = await request.body()
@@ -91,12 +88,12 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                             headers={"X-Request-ID": request_id},
                         )
                 except Exception:
-                    pass  # JSON decode errors are handled downstream by FastAPI/Pydantic
+                    pass  # JSON decode errors handled downstream
 
         # 3. Process Request
         response = await call_next(request)
 
-        # 4. Attach Security and Correlation Headers
+        # 4. Security Headers
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
@@ -105,4 +102,3 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
 
         return response
-

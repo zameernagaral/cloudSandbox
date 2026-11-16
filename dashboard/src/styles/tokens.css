@@ -4,13 +4,13 @@
  */
 
 :root {
-  /* Colours */
+  /* Colours (High-Legibility Tuning) */
   --color-bg-base: #0B0D13;
   --color-surface-bulkhead: #161B26;
   --color-surface-elevated: #1E2536;
-  --color-rule-frame: #2B3448;
-  --color-ink-primary: #F1F5F9;
-  --color-ink-muted: #94A3B8;
+  --color-rule-frame: #334155;
+  --color-ink-primary: #F8FAFC;
+  --color-ink-muted: #B0C0D4;
   --color-signal-hazard: #F59E0B;
   --color-signal-breach: #EF4444;
 
@@ -19,27 +19,27 @@
   --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fragment Mono', monospace;
 
-  /* Typography Scale */
-  --text-2xs: 0.625rem;      /* 10px */
-  --text-xs: 0.75rem;        /* 12px */
-  --text-sm: 0.875rem;       /* 14px */
+  /* Typography Scale (Accessible minimum 12px) */
+  --text-2xs: 0.75rem;       /* 12px */
+  --text-xs: 0.8125rem;      /* 13px */
+  --text-sm: 0.9375rem;      /* 15px */
   --text-base: 1rem;         /* 16px */
   --text-lg: 1.25rem;        /* 20px */
   --text-xl: 1.5625rem;      /* 25px */
   --text-2xl: 1.953rem;      /* 31.25px */
-  --text-display: clamp(2rem, 1.5rem + 2.5vw, 2.75rem); /* 32px to 44px */
+  --text-display: clamp(2rem, 1.5rem + 2.5vw, 2.75rem);
 
   /* 4px Base Spacing */
-  --space-1: 0.25rem;        /* 4px */
-  --space-2: 0.5rem;         /* 8px */
-  --space-3: 0.75rem;        /* 12px */
-  --space-4: 1rem;           /* 16px */
-  --space-5: 1.25rem;        /* 20px */
-  --space-6: 1.5rem;         /* 24px */
-  --space-8: 2rem;           /* 32px */
-  --space-10: 2.5rem;        /* 40px */
-  --space-12: 3rem;          /* 48px */
-  --space-16: 4rem;          /* 64px */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
 
   /* Shape & Radii */
   --radius-none: 0px;
@@ -69,4 +69,3 @@
     --motion-slow: 0ms;
   }
 }
-

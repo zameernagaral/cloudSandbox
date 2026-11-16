@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Terminal } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowRight, LayoutDashboard, Terminal } from 'lucide-react'
+import { useAuthStore } from '../../store/auth'
 
 export function HeroChamber() {
+  const navigate = useNavigate()
+  const { user, loginAsDemo } = useAuthStore()
   const containerRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -152,20 +156,20 @@ export function HeroChamber() {
 
         {/* Bottom-Right Watermark Cover Mask (ensures the bottom-right video watermark is never visible) */}
         <div
-          className="absolute right-0 bottom-0 w-72 h-48 bg-[radial-gradient(circle_at_68%_68%,#0B0D13_45%,rgba(11,13,19,0.92)_65%,transparent_100%)]"
+          className="absolute right-0 bottom-0 w-72 h-48 bg-[radial-gradient(circle_at_72%_72%,#0B0D13_55%,rgba(11,13,19,0.96)_72%,transparent_100%)]"
           aria-hidden="true"
         />
       </div>
 
-      {/* 2. Centered Hero Statements & CTAs (No centered terminal box blocking the 3D cube) */}
+      {/* 2. Centered Hero Statements & Clear Navigation Actions */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center space-y-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-surface-bulkhead/90 border border-rule-frame text-ink-muted text-xs font-mono uppercase tracking-wider">
-          <Terminal className="w-3.5 h-3.5 text-ink-primary" aria-hidden="true" />
-          <span>Firecracker v1.7.0 kernel isolation</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-sm bg-surface-bulkhead/95 border border-rule-frame text-ink-muted text-xs font-mono uppercase tracking-wider">
+          <Terminal className="w-4 h-4 text-ink-primary" aria-hidden="true" />
+          <span>Safe Hardware Isolation (Firecracker v1.7.0)</span>
         </div>
 
-        {/* Localized Contrast Scrim: Frames headline and subhead against glowing 3D code plane */}
-        <div className="space-y-4 max-w-3xl mx-auto p-6 sm:p-8 rounded-xl bg-[#0B0D13]/70 backdrop-blur-sm border border-white/[0.06] shadow-bulkhead">
+        {/* Localized Contrast Scrim: High readability over glowing 3D code plane */}
+        <div className="space-y-5 max-w-3xl mx-auto p-6 sm:p-8 rounded-xl bg-[#0B0D13]/80 backdrop-blur-sm border border-white/10 shadow-bulkhead">
           <h1
             id="hero-heading"
             className="font-display font-bold text-3xl sm:text-5xl lg:text-6xl tracking-tight text-ink-primary leading-[1.12]"
@@ -174,40 +178,45 @@ export function HeroChamber() {
           </h1>
 
           <p className="text-base sm:text-lg text-ink-muted max-w-2xl mx-auto leading-relaxed">
-            Contain untrusted LLM tool loops on your own Linux hardware. When an agent enters an infinite loop or exceeds your budget, the killswitch freezes execution in under 1,000 milliseconds.
+            Safely run AI agents in isolated virtual machines on your own Linux hardware. If an agent gets stuck in an infinite loop or exceeds your spending limit, the killswitch freezes it automatically in under 1 second.
           </p>
         </div>
 
-        <div className="space-y-3 pt-2">
-          <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className="space-y-4 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-3.5">
             <a
               href="#demo"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-sm bg-ink-primary hover:bg-white text-bg-base font-semibold text-sm transition-colors shadow-sm"
+              className="btn-primary px-6 py-3 text-base"
             >
-              <span>Test run rogue agent</span>
+              <span>Try Live Killswitch Simulator</span>
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </a>
 
+            <button
+              type="button"
+              onClick={() => {
+                if (!user) loginAsDemo()
+                navigate('/dashboard')
+              }}
+              className="btn-secondary px-6 py-3 text-base bg-surface-bulkhead/95"
+            >
+              <LayoutDashboard className="w-4 h-4 text-emerald-400" aria-hidden="true" />
+              <span>Open Live Fleet Dashboard</span>
+            </button>
+
             <a
               href="#architecture-proof"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-sm bg-surface-bulkhead/90 hover:bg-surface-elevated border border-rule-frame text-ink-primary font-medium text-sm transition-colors"
+              className="btn-secondary px-5 py-3 text-sm bg-surface-bulkhead/90"
             >
-              Read architecture docs
+              How It Works
             </a>
           </div>
 
           <p className="text-xs font-mono text-ink-muted">
-            Pre-configured $0.01 budget cap · <span className="text-emerald-400">Verified freeze latency: under 850ms</span>
+            Safe $0.01 demo cap enabled · <span className="text-emerald-300 font-semibold">Live backend &amp; CLI synced on port 8000</span>
           </p>
         </div>
       </div>
-
-      {/* 3. Anchor Box over the Bottom-Right Watermark where the Demo Terminal starts before expanding on scroll */}
-      <div
-        id="hero-terminal-anchor"
-        aria-hidden="true"
-        className="hidden lg:block absolute right-7 bottom-6 w-[260px] h-[168px] pointer-events-none"
-      />
     </section>
   )
 }

@@ -1,35 +1,20 @@
-"""SQLAlchemy ORM models — the single source of truth for the database schema."""
+"""Domain models & enumerations for Cloud Sandbox (SQLite-backed)."""
 
 from __future__ import annotations
 
 import enum
 import uuid
-from datetime import datetime
-from typing import Optional
-
-from sqlalchemy import (
-    JSON,
-    BigInteger,
-    Boolean,
-    DateTime,
-    Enum,
-    Float,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
-    func,
-)
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.base import Base
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from typing import Any, Optional
 
 
 def gen_uuid() -> str:
     return str(uuid.uuid4())
+
+
+def _utcnow() -> datetime:
+    return datetime.now(UTC)
 
 
 # ── Enumerations ──────────────────────────────────────────────────────────────
@@ -68,237 +53,140 @@ class AuditEventType(str, enum.Enum):
 # ── Models ────────────────────────────────────────────────────────────────────
 
 
-class User(Base):
-    __tablename__ = "users"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
-    username: Mapped[Optional[str]] = mapped_column(String(64), unique=True, nullable=True)
-    display_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    avatar_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
-    password_hash: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
-    github_id: Mapped[Optional[str]] = mapped_column(String(64), unique=True, nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    # Relationships
-    sandboxes: Mapped[list[Sandbox]] = relationship("Sandbox", back_populates="owner")
-    hosts: Mapped[list[Host]] = relationship("Host", back_populates="owner")
-    api_keys: Mapped[list[ApiKey]] = relationship("ApiKey", back_populates="user")
-    llm_credentials: Mapped[list[LLMCredential]] = relationship(
-        "LLMCredential", back_populates="user"
-    )
-    refresh_tokens: Mapped[list[RefreshToken]] = relationship("RefreshToken", back_populates="user")
-    password_reset_tokens: Mapped[list[PasswordResetToken]] = relationship(
-        "PasswordResetToken", back_populates="user"
-    )
-    quota: Mapped[Optional[UserQuota]] = relationship("UserQuota", back_populates="user", uselist=False)
+@dataclass
+class User:
+    id: str = field(default_factory=gen_uuid)
+    email: str = ""
+    username: Optional[str] = None
+    display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    password_hash: Optional[str] = None
+    github_id: Optional[str] = None
+    is_active: bool = True
+    is_admin: bool = False
+    created_at: datetime = field(default_factory=_utcnow)
+    updated_at: datetime = field(default_factory=_utcnow)
 
 
-class PasswordResetToken(Base):
-    __tablename__ = "password_reset_tokens"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    token_hash: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    used: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
-    user: Mapped[User] = relationship("User", back_populates="password_reset_tokens")
+@dataclass
+class PasswordResetToken:
+    id: str = field(default_factory=gen_uuid)
+    user_id: str = ""
+    token_hash: str = ""
+    expires_at: datetime = field(default_factory=_utcnow)
+    used: bool = False
+    created_at: datetime = field(default_factory=_utcnow)
 
 
-class RefreshToken(Base):
-    __tablename__ = "refresh_tokens"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    token_hash: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    revoked: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
-    user: Mapped[User] = relationship("User", back_populates="refresh_tokens")
+@dataclass
+class RefreshToken:
+    id: str = field(default_factory=gen_uuid)
+    user_id: str = ""
+    token_hash: str = ""
+    expires_at: datetime = field(default_factory=_utcnow)
+    revoked: bool = False
+    created_at: datetime = field(default_factory=_utcnow)
 
 
-class UserQuota(Base):
-    __tablename__ = "user_quotas"
-
-    user_id: Mapped[str] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
-    )
-    max_concurrent_vms: Mapped[int] = mapped_column(Integer, default=5)
-    max_vcpu: Mapped[int] = mapped_column(Integer, default=20)
-    max_ram_mb: Mapped[int] = mapped_column(Integer, default=16384)
-    max_disk_gb: Mapped[int] = mapped_column(Integer, default=100)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    user: Mapped[User] = relationship("User", back_populates="quota")
+@dataclass
+class UserQuota:
+    user_id: str = ""
+    max_concurrent_vms: int = 20
+    max_vcpu: int = 64
+    max_ram_mb: int = 65536
+    max_disk_gb: int = 500
+    updated_at: datetime = field(default_factory=_utcnow)
 
 
-class ApiKey(Base):
-    """User-issued API keys for programmatic access (CLI, etc.)."""
-
-    __tablename__ = "api_keys"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    name: Mapped[str] = mapped_column(String(128), nullable=False)
-    key_hash: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
-    key_prefix: Mapped[str] = mapped_column(String(16), nullable=False)  # for display
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
-    user: Mapped[User] = relationship("User", back_populates="api_keys")
+@dataclass
+class ApiKey:
+    id: str = field(default_factory=gen_uuid)
+    user_id: str = ""
+    name: str = ""
+    key_hash: str = ""
+    key_prefix: str = ""
+    is_active: bool = True
+    last_used_at: Optional[datetime] = None
+    created_at: datetime = field(default_factory=_utcnow)
 
 
-class LLMCredential(Base):
-    """Encrypted LLM API keys stored per-user. Never exposed to VMs."""
-
-    __tablename__ = "llm_credentials"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    provider: Mapped[str] = mapped_column(String(32), nullable=False)  # openai | anthropic
-    encrypted_key: Mapped[str] = mapped_column(Text, nullable=False)  # AES-256-GCM ciphertext
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    user: Mapped[User] = relationship("User", back_populates="llm_credentials")
-
-    __table_args__ = (UniqueConstraint("user_id", "provider", name="uq_llm_cred_user_provider"),)
+@dataclass
+class LLMCredential:
+    id: str = field(default_factory=gen_uuid)
+    user_id: str = ""
+    provider: str = "openai"
+    encrypted_key: str = ""
+    created_at: datetime = field(default_factory=_utcnow)
+    updated_at: datetime = field(default_factory=_utcnow)
 
 
-class Host(Base):
-    """A KVM-enabled machine registered by the user."""
-
-    __tablename__ = "hosts"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
-    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    name: Mapped[str] = mapped_column(String(128), nullable=False)
-    agent_url: Mapped[str] = mapped_column(String(512), nullable=False)  # wss://host:8765
-    token_hash: Mapped[str] = mapped_column(String(256), nullable=False)  # mTLS fallback token
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    last_heartbeat_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    # Capabilities reported by agent
-    total_vcpu: Mapped[int] = mapped_column(Integer, default=0)
-    total_ram_mb: Mapped[int] = mapped_column(Integer, default=0)
-    total_disk_gb: Mapped[int] = mapped_column(Integer, default=0)
-    firecracker_version: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
-    owner: Mapped[User] = relationship("User", back_populates="hosts")
-    sandboxes: Mapped[list[Sandbox]] = relationship("Sandbox", back_populates="host")
+@dataclass
+class Host:
+    id: str = field(default_factory=gen_uuid)
+    owner_id: str = ""
+    name: str = ""
+    agent_url: str = "wss://127.0.0.1:8765"
+    token_hash: str = ""
+    is_active: bool = True
+    last_heartbeat_at: Optional[datetime] = None
+    total_vcpu: int = 16
+    total_ram_mb: int = 32768
+    total_disk_gb: int = 500
+    firecracker_version: Optional[str] = "v1.7.0 (Linux 5.10.198)"
+    created_at: datetime = field(default_factory=_utcnow)
 
 
-class Policy(Base):
-    """Killswitch policy — per-sandbox cost and execution limits."""
-
-    __tablename__ = "policies"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
-    name: Mapped[str] = mapped_column(String(128), nullable=False)
-    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    # Cost limits
-    max_cost_usd: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    max_tokens: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
-    max_tokens_per_minute: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    max_requests_per_minute: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    # Compute limits
-    max_cpu_seconds: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    max_wallclock_seconds: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    # Loop detection
-    loop_detection_n: Mapped[int] = mapped_column(Integer, default=5)
-    loop_detection_window_s: Mapped[int] = mapped_column(Integer, default=60)
-    loop_similarity_threshold: Mapped[float] = mapped_column(Float, default=0.95)
-    # Action on trip
-    action: Mapped[KillswitchAction] = mapped_column(
-        Enum(KillswitchAction), default=KillswitchAction.PAUSE
-    )
-    is_default: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    sandboxes: Mapped[list[Sandbox]] = relationship("Sandbox", back_populates="policy")
+@dataclass
+class Policy:
+    id: str = field(default_factory=gen_uuid)
+    name: str = ""
+    owner_id: str = ""
+    max_cost_usd: Optional[float] = None
+    max_tokens: Optional[int] = None
+    max_tokens_per_minute: Optional[int] = None
+    max_requests_per_minute: Optional[int] = None
+    max_cpu_seconds: Optional[float] = None
+    max_wallclock_seconds: Optional[int] = None
+    loop_detection_n: int = 5
+    loop_detection_window_s: int = 60
+    loop_similarity_threshold: float = 0.95
+    action: KillswitchAction = KillswitchAction.PAUSE
+    is_default: bool = False
+    created_at: datetime = field(default_factory=_utcnow)
+    updated_at: datetime = field(default_factory=_utcnow)
 
 
-class Sandbox(Base):
-    """A microVM sandbox instance."""
-
-    __tablename__ = "sandboxes"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
-    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    host_id: Mapped[Optional[str]] = mapped_column(
-        ForeignKey("hosts.id", ondelete="SET NULL"), nullable=True, index=True
-    )
-    policy_id: Mapped[Optional[str]] = mapped_column(
-        ForeignKey("policies.id", ondelete="SET NULL"), nullable=True
-    )
-    name: Mapped[str] = mapped_column(String(128), nullable=False)
-    state: Mapped[SandboxState] = mapped_column(
-        Enum(SandboxState), default=SandboxState.CREATING, index=True
-    )
-    is_demo: Mapped[bool] = mapped_column(Boolean, default=False)
-    # Firecracker VM config
-    vcpu_count: Mapped[int] = mapped_column(Integer, default=1)
-    mem_size_mb: Mapped[int] = mapped_column(Integer, default=512)
-    vm_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)  # firecracker VM id
-    # Metering totals (also in Redis for speed; synced periodically)
-    total_cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
-    total_tokens: Mapped[int] = mapped_column(BigInteger, default=0)
-    total_requests: Mapped[int] = mapped_column(Integer, default=0)
-    # Killswitch trip info
-    trip_reason: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
-    trip_metric_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    trip_to_pause_latency_ms: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    # Terminal scrollback (last N lines stored in Postgres; full in Redis)
-    scrollback_lines: Mapped[int] = mapped_column(Integer, default=0)
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    frozen_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    destroyed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-
-    owner: Mapped[User] = relationship("User", back_populates="sandboxes")
-    host: Mapped[Optional[Host]] = relationship("Host", back_populates="sandboxes")
-    policy: Mapped[Optional[Policy]] = relationship("Policy", back_populates="sandboxes")
-    audit_events: Mapped[list[AuditEvent]] = relationship("AuditEvent", back_populates="sandbox")
-
-    __table_args__ = (Index("ix_sandboxes_owner_state", "owner_id", "state"),)
+@dataclass
+class Sandbox:
+    id: str = field(default_factory=gen_uuid)
+    owner_id: str = ""
+    host_id: Optional[str] = None
+    policy_id: Optional[str] = None
+    name: str = ""
+    state: SandboxState = SandboxState.CREATING
+    is_demo: bool = False
+    vcpu_count: int = 1
+    mem_size_mb: int = 512
+    vm_id: Optional[str] = None
+    total_cost_usd: float = 0.0
+    total_tokens: int = 0
+    total_requests: int = 0
+    trip_reason: Optional[str] = None
+    trip_metric_value: Optional[float] = None
+    trip_to_pause_latency_ms: Optional[float] = None
+    scrollback_lines: int = 0
+    created_at: datetime = field(default_factory=_utcnow)
+    started_at: Optional[datetime] = None
+    frozen_at: Optional[datetime] = None
+    destroyed_at: Optional[datetime] = None
 
 
-class AuditEvent(Base):
-    """Immutable audit log of all significant system events."""
-
-    __tablename__ = "audit_events"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
-    sandbox_id: Mapped[Optional[str]] = mapped_column(
-        ForeignKey("sandboxes.id", ondelete="SET NULL"), nullable=True, index=True
-    )
-    user_id: Mapped[Optional[str]] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
-    )
-    event_type: Mapped[AuditEventType] = mapped_column(Enum(AuditEventType), nullable=False)
-    payload: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), index=True
-    )
-
-    sandbox: Mapped[Optional[Sandbox]] = relationship("Sandbox", back_populates="audit_events")
+@dataclass
+class AuditEvent:
+    id: str = field(default_factory=gen_uuid)
+    sandbox_id: Optional[str] = None
+    user_id: Optional[str] = None
+    event_type: AuditEventType | str = AuditEventType.SANDBOX_CREATED
+    payload: Optional[dict[str, Any]] = None
+    ip_address: Optional[str] = None
+    created_at: datetime = field(default_factory=_utcnow)
