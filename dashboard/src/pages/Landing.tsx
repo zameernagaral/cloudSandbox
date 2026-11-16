@@ -1,10 +1,26 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { Terminal, Shield, Zap, Lock, Cpu, Layers, CheckCircle2, XCircle } from 'lucide-react'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Terminal, Shield, Zap, Lock, Cpu, Layers, CheckCircle2, XCircle, Copy, Check } from 'lucide-react'
 import { HeroChamber } from '../components/hero/HeroChamber'
 import { InteractiveSimulator } from '../components/demo/InteractiveSimulator'
+import { useAuthStore } from '../store/auth'
 
 export function Landing() {
+  const navigate = useNavigate()
+  const { user, loginAsDemo } = useAuthStore()
+  const [copiedCmd, setCopiedCmd] = useState<string | null>(null)
+
+  const handleOpenFleet = () => {
+    if (!user) loginAsDemo()
+    navigate('/dashboard')
+  }
+
+  const copyCommand = (id: string, cmd: string) => {
+    navigator.clipboard.writeText(cmd)
+    setCopiedCmd(id)
+    setTimeout(() => setCopiedCmd(null), 2000)
+  }
+
   return (
     <div className="min-h-screen bg-bg-base text-ink-primary font-sans">
       {/* Global Header & Navigation Landmark */}
@@ -19,41 +35,37 @@ export function Landing() {
                 <span className="font-display font-bold text-base tracking-tight leading-none text-ink-primary">
                   Cloud Sandbox
                 </span>
-                <span className="font-mono text-[10px] text-ink-muted uppercase tracking-wider">
+                <span className="font-mono text-xs text-ink-muted uppercase tracking-wider">
                   Firecracker microVM Isolation
                 </span>
               </div>
             </Link>
 
             <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-rule-frame">
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" aria-hidden="true" />
                 System operational
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              to="/dashboard"
-              className="hidden sm:inline-flex text-xs font-mono text-ink-muted hover:text-ink-primary px-2 py-1"
-            >
-              Fleet
-            </Link>
             <a
-              href="https://github.com/your-org/cloud-sandbox#readme"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden sm:inline-flex text-xs font-mono text-ink-muted hover:text-ink-primary px-2 py-1"
+              href="#architecture-proof"
+              className="hidden sm:inline-flex text-sm font-medium text-ink-muted hover:text-ink-primary px-2 py-1"
             >
-              Documentation
+              How It Works
             </a>
-            <Link to="/auth/login" className="btn-secondary text-xs px-3 py-1.5">
+            <Link to="/auth/login" className="btn-secondary text-sm px-3.5 py-2">
               Sign in
             </Link>
-            <a href="#demo" className="btn-primary text-xs px-3 py-1.5">
-              Launch demo
-            </a>
+            <button
+              type="button"
+              onClick={handleOpenFleet}
+              className="btn-primary text-sm px-4 py-2"
+            >
+              Open Fleet Console
+            </button>
           </div>
         </nav>
       </header>
@@ -286,49 +298,69 @@ export function Landing() {
           </div>
         </section>
 
-        {/* Section 3: Quick Start Guide */}
+        {/* Section 3: Quick Start Guide (Synced with ./sandboxctl CLI) */}
         <section id="quickstart" aria-labelledby="quickstart-heading" className="card p-6 sm:p-8 bg-surface-bulkhead border border-rule-frame rounded-md space-y-6 shadow-bulkhead">
-          <div className="border-b border-rule-frame pb-3">
-            <h2 id="quickstart-heading" className="font-display font-semibold text-xl text-ink-primary">
-              Start in two commands
-            </h2>
-            <p className="text-xs text-ink-muted">
-              Connect your KVM-enabled Linux server and deploy isolated microVM policies.
-            </p>
+          <div className="border-b border-rule-frame pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 id="quickstart-heading" className="font-display font-semibold text-2xl text-ink-primary">
+                Manage Sandboxes from the Command Line
+              </h2>
+              <p className="text-sm text-ink-muted mt-1">
+                Everything you run with <code className="text-ink-primary font-mono">./sandboxctl</code> updates live on the web dashboard in real time.
+              </p>
+            </div>
+            <button type="button" onClick={handleOpenFleet} className="btn-secondary text-sm shrink-0">
+              Open Web Fleet Dashboard
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-            {/* Box 1: Host Node */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 font-mono text-xs">
+            {/* Box 1: Check Status & Hosts */}
             <div className="border border-rule-frame rounded-sm bg-bg-base overflow-hidden">
-              <div className="bg-surface-elevated px-3 py-2 border-b border-rule-frame flex items-center justify-between text-2xs text-ink-muted">
-                <span className="font-semibold text-ink-primary">HOST HYPERVISOR NODE</span>
-                <span>Ubuntu 22.04 • /dev/kvm</span>
+              <div className="bg-surface-elevated px-4 py-2.5 border-b border-rule-frame flex items-center justify-between text-xs text-ink-muted">
+                <span className="font-semibold text-ink-primary">1. CHECK CONTROL PLANE &amp; HOSTS</span>
+                <span>sandboxctl status</span>
               </div>
-              <div className="p-4 space-y-2">
-                <span className="text-ink-muted block text-2xs uppercase">On your KVM-enabled Linux server:</span>
-                <div className="p-3 bg-surface-bulkhead rounded-sm border border-rule-frame text-ink-primary flex items-center justify-between">
-                  <code className="text-sm font-bold text-ink-primary">$ sandboxctl host init</code>
-                  <span className="text-2xs text-emerald-400 font-mono">host-agent.service</span>
+              <div className="p-4 space-y-3">
+                <span className="text-ink-muted block text-xs uppercase font-sans">Run inside your Cloud Sandbox folder:</span>
+                <div className="p-3 bg-surface-bulkhead rounded-sm border border-rule-frame text-ink-primary flex items-center justify-between gap-2">
+                  <code className="text-sm font-bold text-ink-primary overflow-x-auto">./sandboxctl status &amp;&amp; ./sandboxctl list</code>
+                  <button
+                    type="button"
+                    onClick={() => copyCommand('status', './sandboxctl status && ./sandboxctl list')}
+                    className="btn-secondary px-2.5 py-1.5 min-h-[32px] text-xs shrink-0"
+                    title="Copy command"
+                  >
+                    {copiedCmd === 'status' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
-                <p className="text-3xs text-ink-muted">
-                  Configures cgroups v2, verifies /dev/kvm access, and starts the mTLS daemon.
+                <p className="text-xs text-ink-muted font-sans">
+                  Shows whether the backend API on port 8000 is healthy, active KVM nodes, and running microVMs.
                 </p>
               </div>
             </div>
 
-            {/* Box 2: Developer Workstation */}
+            {/* Box 2: Deploy & Trigger Live Killswitch */}
             <div className="border border-rule-frame rounded-sm bg-bg-base overflow-hidden">
-              <div className="bg-surface-elevated px-3 py-2 border-b border-rule-frame flex items-center justify-between text-2xs text-ink-muted">
-                <span className="font-semibold text-ink-primary">LOCAL WORKSTATION</span>
-                <span>sandboxctl v1.0 • Python CLI</span>
+              <div className="bg-surface-elevated px-4 py-2.5 border-b border-rule-frame flex items-center justify-between text-xs text-ink-muted">
+                <span className="font-semibold text-ink-primary">2. DEPLOY MICROVM &amp; TEST KILLSWITCH</span>
+                <span>sandboxctl deploy</span>
               </div>
-              <div className="p-4 space-y-2">
-                <span className="text-ink-muted block text-2xs uppercase">In your project directory:</span>
-                <div className="p-3 bg-surface-bulkhead rounded-sm border border-rule-frame text-ink-primary">
-                  <code className="text-sm font-bold text-ink-primary">$ sandboxctl deploy --policy '{`{"max_cost_usd": 0.50}`}'</code>
+              <div className="p-4 space-y-3">
+                <span className="text-ink-muted block text-xs uppercase font-sans">Create a sandbox with a strict $0.01 limit:</span>
+                <div className="p-3 bg-surface-bulkhead rounded-sm border border-rule-frame text-ink-primary flex items-center justify-between gap-2">
+                  <code className="text-xs sm:text-sm font-bold text-ink-primary overflow-x-auto">./sandboxctl deploy --name cli-test --policy '{`{"max_cost_usd": 0.01}`}' --scenario loop</code>
+                  <button
+                    type="button"
+                    onClick={() => copyCommand('deploy', `./sandboxctl deploy --name cli-test --policy '{"max_cost_usd": 0.01}' --scenario loop`)}
+                    className="btn-secondary px-2.5 py-1.5 min-h-[32px] text-xs shrink-0"
+                    title="Copy command"
+                  >
+                    {copiedCmd === 'deploy' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
-                <p className="text-3xs text-ink-muted">
-                  Provisions an isolated microVM in &lt;850ms and bridges interactive stdio via VSock.
+                <p className="text-xs text-ink-muted font-sans">
+                  Boots a live microVM on the backend, streams tokens in your terminal, and freezes it automatically when $0.01 is spent.
                 </p>
               </div>
             </div>

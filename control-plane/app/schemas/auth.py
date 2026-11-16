@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field
+
+EmailString = Annotated[
+    str,
+    Field(
+        min_length=3,
+        max_length=255,
+        pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+    ),
+]
 
 
 class RegisterRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    email: EmailStr
+    email: EmailString
     password: str = Field(min_length=8, max_length=128)
     display_name: str | None = Field(None, max_length=128)
 
@@ -16,7 +27,7 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    email: EmailStr
+    email: EmailString
     password: str = Field(min_length=1, max_length=128)
 
 
@@ -36,7 +47,7 @@ class RefreshRequest(BaseModel):
 class ForgotPasswordRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    email: EmailStr
+    email: EmailString
 
 
 class ResetPasswordRequest(BaseModel):

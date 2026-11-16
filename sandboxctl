@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /Users/zameerabdulkalamnagaral/cloudSandbox/cli/venv/bin/sandboxctl "$@"

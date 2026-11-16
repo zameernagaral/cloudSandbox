@@ -1,14 +1,12 @@
-"""Demo mode endpoint — one click launches a rogue agent in a pre-configured microVM."""
+"""Demo mode endpoint — launches a live rogue agent sandbox with a strict $0.01 cap."""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.db.base import get_db
-from app.db.models import Host, KillswitchAction, Policy, User
+from app.db import store
+from app.db.models import KillswitchAction, User
 from app.middleware.auth import get_current_user
 from app.schemas.sandbox import SandboxCreate, SandboxOut
 from app.services.quota import QuotaExceededError, check_sandbox_creation_quota
@@ -20,48 +18,44 @@ settings = get_settings()
 
 @router.post("/launch", response_model=SandboxOut)
 async def launch_demo(
+    scenario: str = "loop",
+    cost_cap_usd: float | None = None,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
 ) -> SandboxOut:
-    """Launch a demo sandbox with a rogue agent and a $0.01 cost cap."""
     if not settings.demo_enabled:
         raise HTTPException(status_code=403, detail="Demo mode is disabled")
 
-    # Get user's first available host
-    host_result = await db.execute(
-        select(Host).where(Host.owner_id == current_user.id, Host.is_active == True).limit(1)  # noqa: E712
-    )
-    host = host_result.scalar_one_or_none()
-    if not host:
-        raise HTTPException(
-            status_code=400,
-            detail="No hosts registered. Run `sandboxctl host init` first.",
-        )
+    hosts = store.list_hosts(current_user.id)
+    if not hosts:
+        store.provision_user_defaults(current_user.id)
+        hosts = store.list_hosts(current_user.id)
+    host = hosts[0]
 
-    # Create a demo policy
-    demo_policy = Policy(
-        name="Demo Policy",
+    cap = cost_cap_usd if cost_cap_usd and cost_cap_usd > 0 else settings.demo_cost_cap_usd
+    demo_policy = store.create_policy(
         owner_id=current_user.id,
-        max_cost_usd=settings.demo_cost_cap_usd,
+        name=f"Demo Policy (${cap:.3f})",
+        max_cost_usd=cap,
         max_tokens=10_000,
         loop_detection_n=3,
         loop_detection_window_s=30,
         action=KillswitchAction.PAUSE,
     )
-    db.add(demo_policy)
-    await db.flush()
 
     try:
-        await check_sandbox_creation_quota(current_user, db)
+        await check_sandbox_creation_quota(current_user)
     except QuotaExceededError as exc:
         raise HTTPException(status_code=429, detail=str(exc))
 
     sandbox_data = SandboxCreate(
-        name=f"demo-{current_user.id[:8]}",
+        name=f"demo-{scenario}-agent",
         host_id=host.id,
         policy_id=demo_policy.id,
-        vcpu_count=1,
-        mem_size_mb=256,
+        vcpu_count=2,
+        mem_size_mb=1024,
         is_demo=True,
+        scenario=scenario if scenario in ("loop", "burst", "safe") else "loop",
+        max_cost_usd=cap,
     )
-    return await create_sandbox(sandbox_data, current_user, db)
+    sb = await create_sandbox(sandbox_data, current_user)
+    return SandboxOut.model_validate(sb)

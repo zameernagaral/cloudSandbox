@@ -1,48 +1,86 @@
-"""Authentication service — JWT, bcrypt, GitHub OAuth."""
+"""Authentication service — HS256 JWT, PBKDF2 password hashing, GitHub OAuth, SQLite-backed."""
 
 from __future__ import annotations
 
+import base64
 import hashlib
+import hmac
+import json
 import secrets
+import time
 from datetime import UTC, datetime, timedelta
 
 import httpx
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.db.models import PasswordResetToken, RefreshToken, User, UserQuota
+from app.db import store
+from app.db.models import User
 from app.schemas.auth import TokenResponse
+from app.services.passwords import hash_password, verify_password
 
 settings = get_settings()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+class JWTError(Exception):
+    pass
 
 
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+def _b64url_encode(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+
+def _b64url_decode(data: str) -> bytes:
+    padding = "=" * (-len(data) % 4)
+    return base64.urlsafe_b64decode(data + padding)
 
 
 def _make_access_token(user_id: str) -> str:
-    expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
-    return jwt.encode(
-        {"sub": user_id, "exp": expire, "type": "access"},
-        settings.secret_key,
-        algorithm=settings.jwt_algorithm,
+    header = _b64url_encode(json.dumps({"alg": "HS256", "typ": "JWT"}, separators=(",", ":")).encode())
+    exp = int((datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)).timestamp())
+    payload = _b64url_encode(
+        json.dumps({"sub": user_id, "exp": exp, "type": "access"}, separators=(",", ":")).encode()
     )
+    signing_input = f"{header}.{payload}".encode("ascii")
+    sig = hmac.new(settings.secret_key.encode("utf-8"), signing_input, hashlib.sha256).digest()
+    return f"{header}.{payload}.{_b64url_encode(sig)}"
 
 
-async def create_token_pair(user: User, db: AsyncSession) -> TokenResponse:
+def decode_access_token(token: str) -> str:
+    """Verify HS256 JWT and return user_id or raise JWTError."""
+    try:
+        parts = token.split(".")
+        if len(parts) != 3:
+            raise JWTError("Malformed token")
+        header_b64, payload_b64, sig_b64 = parts
+        signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
+        expected_sig = hmac.new(
+            settings.secret_key.encode("utf-8"), signing_input, hashlib.sha256
+        ).digest()
+        actual_sig = _b64url_decode(sig_b64)
+        if not hmac.compare_digest(expected_sig, actual_sig):
+            raise JWTError("Invalid signature")
+        payload = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
+        if payload.get("type") != "access":
+            raise JWTError("Not an access token")
+        exp = payload.get("exp")
+        if exp is not None and time.time() > float(exp):
+            raise JWTError("Token expired")
+        sub = payload.get("sub")
+        if not sub:
+            raise JWTError("Missing subject")
+        return str(sub)
+    except JWTError:
+        raise
+    except Exception as exc:
+        raise JWTError(f"Invalid token: {exc}") from exc
+
+
+async def create_token_pair(user: User, db: object = None) -> TokenResponse:
     access_token = _make_access_token(user.id)
     raw_refresh = secrets.token_urlsafe(48)
     token_hash = hashlib.sha256(raw_refresh.encode()).hexdigest()
     expires_at = datetime.now(UTC) + timedelta(days=settings.refresh_token_expire_days)
-    db.add(RefreshToken(user_id=user.id, token_hash=token_hash, expires_at=expires_at))
+    store.save_refresh_token(user.id, token_hash, expires_at)
     return TokenResponse(
         access_token=access_token,
         refresh_token=raw_refresh,
@@ -50,37 +88,19 @@ async def create_token_pair(user: User, db: AsyncSession) -> TokenResponse:
     )
 
 
-async def refresh_tokens(raw_refresh: str, db: AsyncSession) -> TokenResponse:
+async def refresh_tokens(raw_refresh: str, db: object = None) -> TokenResponse:
     token_hash = hashlib.sha256(raw_refresh.encode()).hexdigest()
-    result = await db.execute(
-        select(RefreshToken).where(
-            RefreshToken.token_hash == token_hash,
-            RefreshToken.revoked == False,  # noqa: E712
-            RefreshToken.expires_at > datetime.now(UTC),
-        )
-    )
-    rt = result.scalar_one_or_none()
-    if not rt:
+    user_id = store.consume_refresh_token(token_hash)
+    if not user_id:
         raise ValueError("Invalid or expired refresh token")
-    # Rotate: revoke old, issue new
-    rt.revoked = True
-    user_result = await db.execute(select(User).where(User.id == rt.user_id))
-    user = user_result.scalar_one()
+    user = store.get_user_by_id(user_id)
+    if not user:
+        raise ValueError("User not found")
     return await create_token_pair(user, db)
 
 
-def decode_access_token(token: str) -> str:
-    """Returns user_id or raises JWTError."""
-    payload = jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
-    if payload.get("type") != "access":
-        raise JWTError("Not an access token")
-    return payload["sub"]
-
-
-async def get_or_create_github_user(github_code: str, db: AsyncSession) -> User:
-    """Exchange GitHub code for user profile and upsert the user."""
+async def get_or_create_github_user(github_code: str, db: object = None) -> User:
     async with httpx.AsyncClient() as client:
-        # Exchange code for access token
         token_resp = await client.post(
             "https://github.com/login/oauth/access_token",
             data={
@@ -96,7 +116,6 @@ async def get_or_create_github_user(github_code: str, db: AsyncSession) -> User:
         if not gh_token:
             raise ValueError("GitHub token exchange failed")
 
-        # Get profile
         profile_resp = await client.get(
             "https://api.github.com/user",
             headers={"Authorization": f"Bearer {gh_token}", "Accept": "application/vnd.github+json"},
@@ -105,7 +124,6 @@ async def get_or_create_github_user(github_code: str, db: AsyncSession) -> User:
         profile_resp.raise_for_status()
         profile = profile_resp.json()
 
-        # Get emails
         emails_resp = await client.get(
             "https://api.github.com/user/emails",
             headers={"Authorization": f"Bearer {gh_token}"},
@@ -118,88 +136,50 @@ async def get_or_create_github_user(github_code: str, db: AsyncSession) -> User:
         )
 
     github_id = str(profile["id"])
-    result = await db.execute(select(User).where(User.github_id == github_id))
-    user = result.scalar_one_or_none()
-
+    user = store.get_user_by_github_id(github_id)
     if user is None:
-        # Check if email already exists (link accounts)
         if primary_email:
-            email_result = await db.execute(select(User).where(User.email == primary_email))
-            user = email_result.scalar_one_or_none()
-
+            user = store.get_user_by_email(primary_email)
         if user is None:
-            user = User(
+            user = store.create_user(
                 email=primary_email or f"github_{github_id}@noreply.github.com",
                 display_name=profile.get("name") or profile.get("login"),
                 username=profile.get("login"),
                 avatar_url=profile.get("avatar_url"),
                 github_id=github_id,
+                is_admin=True,
             )
-            db.add(user)
-            await db.flush()
-            db.add(UserQuota(user_id=user.id))
         else:
-            user.github_id = github_id
-            user.avatar_url = profile.get("avatar_url")
+            user = store.update_user(
+                user.id, github_id=github_id, avatar_url=profile.get("avatar_url")
+            ) or user
     return user
 
 
-async def revoke_refresh_token(raw_refresh: str, db: AsyncSession) -> bool:
-    """Revokes a refresh token immediately."""
+async def revoke_refresh_token(raw_refresh: str, db: object = None) -> bool:
     token_hash = hashlib.sha256(raw_refresh.encode()).hexdigest()
-    result = await db.execute(
-        select(RefreshToken).where(RefreshToken.token_hash == token_hash, RefreshToken.revoked == False)  # noqa: E712
-    )
-    rt = result.scalar_one_or_none()
-    if rt:
-        rt.revoked = True
-        return True
-    return False
+    return store.revoke_refresh_token_by_hash(token_hash)
 
 
-async def create_password_reset_token(email: str, db: AsyncSession) -> str | None:
-    """Generates a single-use 15-minute reset token for the given user, or returns None if user not found."""
-    result = await db.execute(select(User).where(User.email == email, User.is_active == True))  # noqa: E712
-    user = result.scalar_one_or_none()
-    if not user:
+async def create_password_reset_token(email: str, db: object = None) -> str | None:
+    user = store.get_user_by_email(email)
+    if not user or not user.is_active:
         return None
-
     raw_token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
     expires_at = datetime.now(UTC) + timedelta(minutes=15)
-
-    reset_entry = PasswordResetToken(
-        user_id=user.id,
-        token_hash=token_hash,
-        expires_at=expires_at,
-        used=False,
-    )
-    db.add(reset_entry)
+    store.save_reset_token(user.id, token_hash, expires_at)
     return raw_token
 
 
-async def reset_password_with_token(token: str, new_password: str, db: AsyncSession) -> bool:
-    """Validates token and updates user password hash. Enforces single-use."""
+async def reset_password_with_token(token: str, new_password: str, db: object = None) -> bool:
     token_hash = hashlib.sha256(token.encode()).hexdigest()
-    result = await db.execute(
-        select(PasswordResetToken).where(
-            PasswordResetToken.token_hash == token_hash,
-            PasswordResetToken.used == False,  # noqa: E712
-            PasswordResetToken.expires_at > datetime.now(UTC),
-        )
-    )
-    entry = result.scalar_one_or_none()
-    if not entry:
+    user_id = store.consume_reset_token(token_hash)
+    if not user_id:
         return False
-
-    entry.used = True
-    user_result = await db.execute(select(User).where(User.id == entry.user_id))
-    user = user_result.scalar_one()
-    user.password_hash = hash_password(new_password)
+    store.update_user(user_id, password_hash=hash_password(new_password))
     return True
 
 
-async def delete_user_account_and_data(user: User, db: AsyncSession) -> None:
-    """Cascading deletion of user account and associated sandbox metadata."""
-    await db.delete(user)
-
+async def delete_user_account_and_data(user: User, db: object = None) -> None:
+    store.delete_user(user.id)

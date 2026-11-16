@@ -47,15 +47,15 @@ export function Login() {
 
   return (
     <AuthLayout title="Sign in to Cloud Sandbox">
-      {/* 1-Click Demo Login for presentations */}
+      {/* Quick Operator Access into Live Control Plane */}
       <button
         onClick={handleDemoLogin}
         type="button"
         id="demo-login-btn"
-        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-signal-hazard text-bg-base font-mono text-sm font-semibold hover:bg-[#D97706] transition-colors mb-4"
+        className="btn-primary w-full justify-center mb-4 text-sm"
       >
         <Sparkles className="w-4 h-4 text-bg-base" aria-hidden="true" />
-        Instant Demo Login (For Presentations)
+        Enter Live Operator Dashboard
       </button>
 
       <button

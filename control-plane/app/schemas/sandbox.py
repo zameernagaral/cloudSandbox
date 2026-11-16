@@ -46,11 +46,26 @@ class SandboxCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str = Field(max_length=128)
-    host_id: str
+    host_id: str | None = None
     policy_id: str | None = None
-    vcpu_count: int = Field(1, ge=1, le=32)
-    mem_size_mb: int = Field(512, ge=128, le=65536)
+    vcpu_count: int = Field(2, ge=1, le=32)
+    mem_size_mb: int = Field(1024, ge=128, le=65536)
     is_demo: bool = False
+    scenario: str | None = None
+    max_cost_usd: float | None = Field(None, gt=0)
+
+
+class RunWorkloadRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    scenario: str = Field("loop", pattern="^(loop|burst|safe)$")
+    max_cost_usd: float | None = Field(None, gt=0)
+
+
+class ExecCommandRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    command: str = Field(min_length=1, max_length=2000)
 
 
 class SandboxOut(BaseModel):
@@ -117,23 +132,25 @@ class HostOut(BaseModel):
 class HostRegisterRequest(BaseModel):
     """Sent by sandboxctl host init to register a new host."""
     name: str
-    agent_url: str
-    total_vcpu: int
-    total_ram_mb: int
-    total_disk_gb: int
-    firecracker_version: str | None = None
+    agent_url: str = "wss://127.0.0.1:8765"
+    total_vcpu: int = 8
+    total_ram_mb: int = 16384
+    total_disk_gb: int = 100
+    firecracker_version: str | None = "v1.7.0 (Linux 5.10.198)"
 
 
 class HostRegisterResponse(BaseModel):
     host_id: str
-    token: str  # bearer token for host↔CP communication
+    id: str
+    name: str
+    token: str
 
 
 class ResumeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    new_max_cost_usd: float | None = None
-    new_max_tokens: int | None = None
+    new_max_cost_usd: float | None = Field(None, gt=0)
+    new_max_tokens: int | None = Field(None, gt=0)
 
 
 class SandboxEvent(BaseModel):
@@ -162,7 +179,6 @@ class ApiKeyOut(BaseModel):
 
 
 class ApiKeyCreated(ApiKeyOut):
-    """Returned once on creation — includes the raw key (never stored)."""
     raw_key: str
 
 

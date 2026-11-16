@@ -1,38 +1,51 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Plus,
   Terminal,
   Play,
+  Pause,
+  Trash2,
   Server,
   X,
   Zap,
-  Activity,
   Cpu,
   Layers,
   Shield,
   ArrowRight,
+  Copy,
+  Check,
+  RefreshCw,
 } from 'lucide-react'
 import { api } from '../api/client'
-import type { Sandbox, Host, Policy } from '../api/types'
+import type { Sandbox, Host } from '../api/types'
 import { StatusBadge } from '../components/ui/StatusBadge'
 import { Spinner } from '../components/ui/Spinner'
 import toast from 'react-hot-toast'
 
 export function Dashboard() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [isCreating, setIsCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [copiedCli, setCopiedCli] = useState(false)
+  const [busyId, setBusyId] = useState<string | null>(null)
 
   // New Sandbox Form State
   const [newName, setNewName] = useState('')
   const [preset, setPreset] = useState<'standard' | 'high' | 'mini'>('standard')
-  const [selectedPolicyId, setSelectedPolicyId] = useState<string>('')
+  const [workloadScenario, setWorkloadScenario] = useState<'loop' | 'burst' | 'safe' | 'idle'>('loop')
+  const [capUsd, setCapUsd] = useState<string>('0.01')
 
-  const { data: sandboxes, refetch: refetchSandboxes, isLoading } = useQuery({
+  const {
+    data: sandboxes,
+    refetch: refetchSandboxes,
+    isLoading,
+  } = useQuery({
     queryKey: ['sandboxes'],
     queryFn: () => api.get<Sandbox[]>('/sandboxes'),
+    refetchInterval: 1500,
   })
 
   const { data: hosts } = useQuery({
@@ -40,13 +53,12 @@ export function Dashboard() {
     queryFn: () => api.get<Host[]>('/hosts'),
   })
 
-  const { data: policies } = useQuery({
-    queryKey: ['policies'],
-    queryFn: () => api.get<Policy[]>('/policies'),
-  })
+  const cliDeployCmd = `./sandboxctl deploy --name cli-demo --policy '{"max_cost_usd": 0.01}' --scenario loop`
 
-  const handleLaunchRogueDemo = () => {
-    navigate('/demo')
+  const handleCopyCli = () => {
+    navigator.clipboard.writeText(cliDeployCmd)
+    setCopiedCli(true)
+    setTimeout(() => setCopiedCli(false), 2000)
   }
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -55,16 +67,22 @@ export function Dashboard() {
 
     const vcpu_count = preset === 'high' ? 4 : preset === 'mini' ? 1 : 2
     const mem_size_mb = preset === 'high' ? 2048 : preset === 'mini' ? 512 : 1024
+    const parsedCap = parseFloat(capUsd) || 0.01
 
     try {
-      const created = await api.post<Sandbox>('/sandboxes', {
-        name: newName || `sb-${Math.random().toString(36).slice(2, 8)}`,
+      const payload: Record<string, unknown> = {
+        name: newName || `agent-vm-${Math.random().toString(36).slice(2, 6)}`,
         host_id: hosts?.[0]?.id ?? 'host-01',
-        policy_id: selectedPolicyId || policies?.[0]?.id || 'pol-cost-cap',
         vcpu_count,
         mem_size_mb,
-      })
-      toast.success('Firecracker microVM spawned successfully!')
+        max_cost_usd: parsedCap,
+      }
+      if (workloadScenario !== 'idle') {
+        payload.scenario = workloadScenario
+      }
+
+      const created = await api.post<Sandbox>('/sandboxes', payload)
+      toast.success(`MicroVM "${created.name}" is now RUNNING`)
       setShowCreateModal(false)
       setNewName('')
       await refetchSandboxes()
@@ -72,38 +90,104 @@ export function Dashboard() {
         navigate(`/sandbox/${created.id}`)
       }
     } catch (err: any) {
-      toast.error(err.message ?? 'Sandbox creation failed')
+      toast.error(err.message ?? 'Could not create sandbox')
     } finally {
       setIsCreating(false)
     }
   }
 
-  // Summary Metrics
+  const handleRunScenario = async (e: React.MouseEvent, sb: Sandbox, scenario: 'loop' | 'safe') => {
+    e.preventDefault()
+    e.stopPropagation()
+    setBusyId(sb.id)
+    try {
+      await api.post(`/sandboxes/${sb.id}/run`, { scenario })
+      toast.success(`Started "${scenario}" workload on ${sb.name}`)
+      await refetchSandboxes()
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to start workload')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const handlePause = async (e: React.MouseEvent, sb: Sandbox) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setBusyId(sb.id)
+    try {
+      await api.post(`/sandboxes/${sb.id}/pause`)
+      toast.success(`Paused ${sb.name}`)
+      await refetchSandboxes()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const handleResume = async (e: React.MouseEvent, sb: Sandbox) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setBusyId(sb.id)
+    try {
+      const nextCap = Number(((sb.total_cost_usd || 0.01) + 0.05).toFixed(2))
+      await api.post(`/sandboxes/${sb.id}/resume`, { new_max_cost_usd: nextCap })
+      toast.success(`Resumed ${sb.name} (new cap: $${nextCap.toFixed(2)})`)
+      await refetchSandboxes()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const handleDestroy = async (e: React.MouseEvent, sb: Sandbox) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!confirm(`Destroy sandbox "${sb.name}" permanently?`)) return
+    setBusyId(sb.id)
+    try {
+      await api.delete(`/sandboxes/${sb.id}`)
+      toast.success(`Destroyed ${sb.name}`)
+      await queryClient.invalidateQueries({ queryKey: ['sandboxes'] })
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   const totalCost = sandboxes?.reduce((acc, s) => acc + (s.total_cost_usd || 0), 0) ?? 0
   const runningCount = sandboxes?.filter((s) => s.state === 'RUNNING').length ?? 0
   const frozenCount = sandboxes?.filter((s) => s.state === 'FROZEN').length ?? 0
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
+    <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-8">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Sandboxes</h1>
-          <p className="text-sm text-text-dim">
-            Manage your isolated Firecracker microVM instances and automatic killswitches.
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink-primary">
+            MicroVM Fleet Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-ink-muted mt-1">
+            Create, monitor, and freeze isolated AI agent virtual machines in real time (synced every 1.5s with CLI).
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={handleLaunchRogueDemo}
-            className="btn-secondary text-frozen hover:text-frozen hover:border-frozen/40"
+            type="button"
+            onClick={() => refetchSandboxes()}
+            className="btn-secondary"
+            title="Refresh list now"
           >
-            <Zap className="w-4 h-4 text-frozen" />
-            Live Rogue Demo
+            <RefreshCw className="w-4 h-4" />
+            Refresh
           </button>
           <button
+            type="button"
             onClick={() => setShowCreateModal(true)}
-            className="btn-primary"
+            className="btn-primary text-base px-5"
           >
             <Plus className="w-4 h-4" />
             New MicroVM Sandbox
@@ -111,38 +195,63 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Overview Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card p-4">
-          <div className="text-[11px] text-muted uppercase tracking-wider font-mono">Total Sandboxes</div>
-          <div className="text-2xl font-bold text-text mt-1">{sandboxes?.length ?? 0}</div>
-        </div>
-        <div className="card p-4">
-          <div className="text-[11px] text-muted uppercase tracking-wider font-mono">Running VMs</div>
-          <div className="text-2xl font-bold text-success mt-1">{runningCount}</div>
-        </div>
-        <div className="card p-4">
-          <div className="text-[11px] text-muted uppercase tracking-wider font-mono">Killswitch Frozen</div>
-          <div className="text-2xl font-bold text-frozen mt-1">{frozenCount}</div>
-        </div>
-        <div className="card p-4">
-          <div className="text-[11px] text-muted uppercase tracking-wider font-mono">Cumulative Spend</div>
-          <div className="text-2xl font-bold font-mono text-accent mt-1">${totalCost.toFixed(4)}</div>
+      {/* Clear Web + CLI Live Sync Guide Banner */}
+      <div className="card p-5 bg-surface-elevated/70 border border-rule-frame space-y-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="text-sm font-semibold text-ink-primary flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-emerald-400" />
+              Web Dashboard &amp; CLI Tool Are Live-Synced
+            </div>
+            <p className="text-sm text-ink-muted">
+              Click <strong className="text-ink-primary">New MicroVM Sandbox</strong> above, or run this CLI command in your Mac terminal and watch the new VM appear here automatically:
+            </p>
+          </div>
+          <div className="flex items-center gap-2 bg-bg-base border border-rule-frame rounded-sm px-3 py-2 font-mono text-xs shrink-0 max-w-full overflow-x-auto">
+            <code className="text-emerald-300 whitespace-nowrap">{cliDeployCmd}</code>
+            <button
+              type="button"
+              onClick={handleCopyCli}
+              className="btn-secondary px-2.5 py-1 min-h-[30px] text-xs shrink-0"
+            >
+              {copiedCli ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Host Status Check */}
+      {/* Overview Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="card p-5">
+          <div className="text-xs text-ink-muted uppercase tracking-wider font-mono">Total Sandboxes</div>
+          <div className="text-3xl font-bold text-ink-primary mt-1">{sandboxes?.length ?? 0}</div>
+        </div>
+        <div className="card p-5">
+          <div className="text-xs text-ink-muted uppercase tracking-wider font-mono">Active &amp; Running</div>
+          <div className="text-3xl font-bold text-emerald-400 mt-1">{runningCount}</div>
+        </div>
+        <div className="card p-5">
+          <div className="text-xs text-ink-muted uppercase tracking-wider font-mono">Killswitch Frozen</div>
+          <div className="text-3xl font-bold text-cyan-400 mt-1">{frozenCount}</div>
+        </div>
+        <div className="card p-5">
+          <div className="text-xs text-ink-muted uppercase tracking-wider font-mono">Total API Spend</div>
+          <div className="text-3xl font-bold font-mono text-amber-400 mt-1">${totalCost.toFixed(4)}</div>
+        </div>
+      </div>
+
+      {/* Host Status Notice if zero hosts */}
       {!hosts?.length && !isLoading && (
-        <div className="card p-6 border-warning/30 bg-warning/5 flex items-center justify-between">
+        <div className="card p-5 border-amber-500/40 bg-amber-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Server className="w-8 h-8 text-warning" />
+            <Server className="w-8 h-8 text-amber-400 shrink-0" />
             <div>
-              <h3 className="font-semibold text-sm">No bare-metal KVM host connected</h3>
-              <p className="text-xs text-text-dim">You need a host running the Firecracker agent to execute real VMs.</p>
+              <h3 className="font-semibold text-base text-ink-primary">No KVM host node registered</h3>
+              <p className="text-sm text-ink-muted">Register a KVM node in Settings or run `./sandboxctl host init`.</p>
             </div>
           </div>
-          <Link to="/settings" className="btn-secondary text-xs">
-            Setup Host Agent
+          <Link to="/settings" className="btn-secondary">
+            Register Host in Settings
           </Link>
         </div>
       )}
@@ -153,14 +262,14 @@ export function Dashboard() {
           <Spinner />
         </div>
       ) : sandboxes?.length === 0 ? (
-        <div className="card p-12 text-center border-dashed">
-          <Terminal className="w-12 h-12 text-muted mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">No sandboxes running</h3>
-          <p className="text-text-dim mb-6 max-w-md mx-auto text-sm">
-            Spawn a Firecracker microVM to run AI coding agents safely with isolated execution and budget caps.
+        <div className="card p-12 text-center border-dashed space-y-4">
+          <Terminal className="w-12 h-12 text-ink-muted mx-auto" />
+          <h3 className="text-xl font-semibold text-ink-primary">No sandboxes yet</h3>
+          <p className="text-ink-muted max-w-md mx-auto text-sm">
+            Create a Firecracker microVM to test AI agent isolation and automatic cost limits.
           </p>
-          <button onClick={() => setShowCreateModal(true)} className="btn-primary">
-            Create your first sandbox
+          <button type="button" onClick={() => setShowCreateModal(true)} className="btn-primary">
+            Create Your First Sandbox
           </button>
         </div>
       ) : (
@@ -168,79 +277,133 @@ export function Dashboard() {
           {sandboxes?.map((sb: Sandbox) => {
             const isFrozen = sb.state === 'FROZEN'
             const isRunning = sb.state === 'RUNNING'
+            const isBusy = busyId === sb.id
 
             return (
-              <Link
+              <div
                 key={sb.id}
-                to={`/sandbox/${sb.id}`}
-                className={`card p-5 hover:border-accent/50 hover:shadow-[0_0_20px_rgba(91,106,240,0.12)] transition-all flex flex-col justify-between group ${
-                  isFrozen ? 'border-frozen/40 bg-frozen/[0.03]' : ''
+                className={`card p-5 flex flex-col justify-between transition-all ${
+                  isFrozen ? 'border-cyan-500/50 bg-cyan-950/10' : 'hover:border-slate-500'
                 }`}
               >
                 <div>
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-text group-hover:text-accent transition-colors truncate max-w-[170px]">
+                        <Link
+                          to={`/sandbox/${sb.id}`}
+                          className="font-semibold text-base text-ink-primary hover:underline truncate"
+                        >
                           {sb.name}
-                        </h3>
+                        </Link>
                         {sb.is_demo && (
-                          <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 bg-accent/15 text-accent rounded">
+                          <span className="text-xs font-mono font-medium px-2 py-0.5 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded-sm shrink-0">
                             DEMO
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-muted font-mono">{sb.id}</div>
+                      <div className="text-xs text-ink-muted font-mono mt-0.5">{sb.id}</div>
                     </div>
-                    <StatusBadge state={sb.state as any} />
+                    <StatusBadge state={sb.state} />
                   </div>
 
                   {/* Frozen Callout */}
                   {isFrozen && (
-                    <div className="mb-4 p-2.5 rounded-lg bg-frozen/10 border border-frozen/30 text-xs text-frozen">
-                      <div className="font-semibold flex items-center gap-1">
-                        <Zap className="w-3.5 h-3.5" /> Killswitch Enforced
+                    <div className="mb-4 p-3 rounded-sm bg-cyan-950/50 border border-cyan-500/40 text-xs text-cyan-200">
+                      <div className="font-semibold flex items-center gap-1.5 text-cyan-300">
+                        <Zap className="w-4 h-4 shrink-0" /> Killswitch Triggered
                       </div>
-                      <div className="text-[11px] text-text-dim mt-0.5">
-                        {sb.trip_reason || 'Max cost cap exceeded'}
-                        {sb.trip_to_pause_latency_ms && ` (${sb.trip_to_pause_latency_ms}ms)`}
+                      <div className="mt-1 leading-snug">
+                        {sb.trip_reason || 'Cost limit reached'}
+                        {sb.trip_to_pause_latency_ms ? ` (Paused in ${sb.trip_to_pause_latency_ms.toFixed(1)}ms)` : ''}
                       </div>
                     </div>
                   )}
 
-                  {/* Specs Pill */}
-                  <div className="flex items-center gap-3 text-xs text-text-dim mb-4 pb-3 border-b border-border/50 font-mono">
-                    <span className="flex items-center gap-1">
-                      <Cpu className="w-3.5 h-3.5 text-accent" /> {sb.vcpu_count} vCPU
+                  {/* Specs */}
+                  <div className="flex items-center gap-4 text-xs text-ink-muted mb-4 pb-3 border-b border-rule-frame font-mono">
+                    <span className="flex items-center gap-1.5">
+                      <Cpu className="w-4 h-4 text-ink-primary" /> {sb.vcpu_count} vCPU
                     </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Layers className="w-3.5 h-3.5 text-purple-400" /> {sb.mem_size_mb} MB
+                    <span className="flex items-center gap-1.5">
+                      <Layers className="w-4 h-4 text-ink-primary" /> {sb.mem_size_mb} MB RAM
                     </span>
                   </div>
 
-                  {/* Meter summary */}
-                  <div className="space-y-2 text-xs">
+                  {/* Spend & Tokens */}
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-text-dim">Current Spend:</span>
-                      <span className="font-mono font-semibold text-text">
-                        ${(sb.total_cost_usd || 0).toFixed(4)}
+                      <span className="text-ink-muted">Money Spent:</span>
+                      <span className="font-mono font-semibold text-ink-primary">
+                        ${(sb.total_cost_usd || 0).toFixed(4)} USD
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-text-dim">Tokens:</span>
-                      <span className="font-mono text-text">
-                        {(sb.total_tokens || 0).toLocaleString()}
+                      <span className="text-ink-muted">Tokens Metered:</span>
+                      <span className="font-mono text-ink-primary">
+                        {(sb.total_tokens || 0).toLocaleString()} ({sb.total_requests || 0} calls)
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-border flex items-center justify-between text-xs text-text-dim group-hover:text-accent transition-colors">
-                  <span>Open VM Console</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                {/* Clear Direct Actions */}
+                <div className="mt-5 pt-4 border-t border-rule-frame space-y-2.5">
+                  <div className="flex flex-wrap gap-2">
+                    {isRunning && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={(e) => handleRunScenario(e, sb, 'loop')}
+                          className="btn-secondary flex-1 justify-center text-xs px-3 py-2 min-h-[36px] text-amber-300 border-amber-500/35"
+                        >
+                          <Zap className="w-3.5 h-3.5" /> Run Rogue Loop
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={(e) => handlePause(e, sb)}
+                          className="btn-secondary justify-center text-xs px-3 py-2 min-h-[36px]"
+                          title="Pause MicroVM"
+                        >
+                          <Pause className="w-3.5 h-3.5" /> Pause
+                        </button>
+                      </>
+                    )}
+
+                    {isFrozen && (
+                      <button
+                        type="button"
+                        disabled={isBusy}
+                        onClick={(e) => handleResume(e, sb)}
+                        className="btn-secondary flex-1 justify-center text-xs px-3 py-2 min-h-[36px] text-emerald-300 border-emerald-500/40"
+                      >
+                        <Play className="w-3.5 h-3.5" /> Raise Cap (+$0.05) &amp; Resume
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      disabled={isBusy}
+                      onClick={(e) => handleDestroy(e, sb)}
+                      className="btn-secondary px-2.5 py-2 min-h-[36px] text-red-300 hover:bg-red-500/15"
+                      title="Destroy Sandbox"
+                      aria-label={`Destroy ${sb.name}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <Link
+                    to={`/sandbox/${sb.id}`}
+                    className="btn-primary w-full justify-between text-xs px-3.5 py-2 min-h-[38px]"
+                  >
+                    <span>Open Interactive VM Console &amp; Logs</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </div>
-              </Link>
+              </div>
             )
           })}
         </div>
@@ -248,33 +411,35 @@ export function Dashboard() {
 
       {/* Create Sandbox Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="card w-full max-w-lg p-6 space-y-6 shadow-2xl relative border-accent/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="card w-full max-w-lg p-6 space-y-5 shadow-2xl relative border-slate-500">
             <button
+              type="button"
               onClick={() => setShowCreateModal(false)}
-              className="absolute top-4 right-4 p-1.5 text-muted hover:text-text rounded-lg hover:bg-border transition-colors"
+              aria-label="Close modal"
+              className="absolute top-4 right-4 p-2 text-ink-muted hover:text-ink-primary rounded-sm hover:bg-surface-elevated"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
 
             <div>
-              <h2 className="text-lg font-bold text-text flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-accent" />
-                Spawn Firecracker MicroVM
+              <h2 className="text-xl font-display font-bold text-ink-primary flex items-center gap-2">
+                <Terminal className="w-5 h-5 text-amber-400" />
+                Launch New Firecracker MicroVM
               </h2>
-              <p className="text-xs text-text-dim mt-0.5">
-                Launch an isolated microVM with hardware virtualization and automatic budget caps.
+              <p className="text-sm text-ink-muted mt-1">
+                Create an isolated virtual machine with an automatic spending limit.
               </p>
             </div>
 
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs text-text-dim mb-1.5 font-medium">
-                  Sandbox Instance Name
+                <label className="block text-sm text-ink-primary mb-1.5 font-medium">
+                  1. Sandbox Name
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. swe-bench-agent-vm"
+                  placeholder="e.g. faculty-eval-agent"
                   className="input"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
@@ -283,73 +448,71 @@ export function Dashboard() {
 
               {/* Resource Presets */}
               <div>
-                <label className="block text-xs text-text-dim mb-1.5 font-medium">
-                  Compute Resources (vCPU & RAM)
+                <label className="block text-sm text-ink-primary mb-1.5 font-medium">
+                  2. Virtual Hardware Size
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPreset('mini')}
-                    className={`p-3 rounded-lg border text-left transition-all ${
-                      preset === 'mini'
-                        ? 'border-accent bg-accent/10 text-text'
-                        : 'border-border bg-bg/50 text-text-dim hover:text-text'
-                    }`}
-                  >
-                    <div className="font-semibold text-xs">Minimal</div>
-                    <div className="text-[11px] text-muted font-mono mt-1">1 vCPU • 512MB</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPreset('standard')}
-                    className={`p-3 rounded-lg border text-left transition-all ${
-                      preset === 'standard'
-                        ? 'border-accent bg-accent/10 text-text'
-                        : 'border-border bg-bg/50 text-text-dim hover:text-text'
-                    }`}
-                  >
-                    <div className="font-semibold text-xs">Standard</div>
-                    <div className="text-[11px] text-muted font-mono mt-1">2 vCPU • 1GB</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPreset('high')}
-                    className={`p-3 rounded-lg border text-left transition-all ${
-                      preset === 'high'
-                        ? 'border-accent bg-accent/10 text-text'
-                        : 'border-border bg-bg/50 text-text-dim hover:text-text'
-                    }`}
-                  >
-                    <div className="font-semibold text-xs">High-Compute</div>
-                    <div className="text-[11px] text-muted font-mono mt-1">4 vCPU • 2GB</div>
-                  </button>
+                <div className="grid grid-cols-3 gap-2.5">
+                  {[
+                    { id: 'mini', label: 'Small', spec: '1 vCPU • 512MB' },
+                    { id: 'standard', label: 'Standard', spec: '2 vCPU • 1GB' },
+                    { id: 'high', label: 'Large', spec: '4 vCPU • 2GB' },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setPreset(item.id as 'mini' | 'standard' | 'high')}
+                      className={`p-3 rounded-sm border text-left transition-all ${
+                        preset === item.id
+                          ? 'border-ink-primary bg-surface-elevated text-ink-primary'
+                          : 'border-rule-frame bg-bg-base/60 text-ink-muted hover:text-ink-primary'
+                      }`}
+                    >
+                      <div className="font-semibold text-sm">{item.label}</div>
+                      <div className="text-xs text-ink-muted font-mono mt-1">{item.spec}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Security Policy Selection */}
-              <div>
-                <label className="block text-xs text-text-dim mb-1.5 font-medium">
-                  Security & Killswitch Policy
-                </label>
-                <select
-                  className="input"
-                  value={selectedPolicyId}
-                  onChange={(e) => setSelectedPolicyId(e.target.value)}
-                >
-                  {policies?.map((pol: Policy) => (
-                    <option key={pol.id} value={pol.id}>
-                      {pol.name} (Cap: ${pol.max_cost_usd?.toFixed(2) ?? '1.00'})
-                    </option>
-                  ))}
-                </select>
+              {/* Budget Limit */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-ink-primary mb-1.5 font-medium">
+                    3. Spending Limit (USD)
+                  </label>
+                  <select
+                    className="input"
+                    value={capUsd}
+                    onChange={(e) => setCapUsd(e.target.value)}
+                  >
+                    <option value="0.01">$0.01 USD (Strict Killswitch Test)</option>
+                    <option value="0.05">$0.05 USD (Short Task)</option>
+                    <option value="0.50">$0.50 USD (Balanced)</option>
+                    <option value="5.00">$5.00 USD (Extended Dev)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-ink-primary mb-1.5 font-medium">
+                    4. Initial Test Behavior
+                  </label>
+                  <select
+                    className="input"
+                    value={workloadScenario}
+                    onChange={(e) => setWorkloadScenario(e.target.value as 'loop' | 'burst' | 'safe' | 'idle')}
+                  >
+                    <option value="loop">Run Rogue Infinite Loop (Tests Auto-Freeze)</option>
+                    <option value="burst">Run Sudden Cost Surge</option>
+                    <option value="safe">Run Safe Normal Task</option>
+                    <option value="idle">Open Idle Linux Shell Only</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="p-3 rounded-lg bg-surface border border-border text-xs text-text-dim flex items-start gap-2">
-                <Shield className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+              <div className="p-3.5 rounded-sm bg-bg-base border border-rule-frame text-xs text-ink-muted flex items-start gap-2.5">
+                <Shield className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <span>
-                  Host LLM Gateway will inject API keys into outgoing requests and trip the microVM killswitch if cost exceeds policy cap.
+                  Your API keys are stored encrypted on the host and never enter the microVM. If spending reaches ${capUsd}, the VM pauses automatically.
                 </span>
               </div>
 
@@ -361,9 +524,9 @@ export function Dashboard() {
                 >
                   Cancel
                 </button>
-                <button type="submit" disabled={isCreating} className="btn-primary">
+                <button type="submit" disabled={isCreating} className="btn-primary px-6">
                   {isCreating ? <Spinner size="sm" /> : <Play className="w-4 h-4" />}
-                  Launch MicroVM
+                  Boot MicroVM
                 </button>
               </div>
             </form>

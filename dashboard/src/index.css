@@ -10,6 +10,7 @@
     background: var(--color-bg-base);
     color: var(--color-ink-primary);
     font-family: var(--font-body);
+    font-size: 16px;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -17,54 +18,65 @@
     margin: 0;
     min-height: 100vh;
     background: var(--color-bg-base);
+    line-height: 1.55;
   }
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: var(--color-bg-base); }
-  ::-webkit-scrollbar-thumb { background: var(--color-rule-frame); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #3E4B65; }
+  ::-webkit-scrollbar-thumb { background: var(--color-rule-frame); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #475569; }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-ink-primary hover:bg-white 
+    @apply inline-flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-sm bg-ink-primary hover:bg-white 
     text-bg-base font-semibold text-sm transition-colors duration-fast ease-mechanical shadow-sm
-    focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-bg-base;
+    focus:outline-none focus:ring-2 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-bg-base
+    disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-secondary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-surface-bulkhead border border-rule-frame 
-    text-ink-muted hover:text-ink-primary hover:border-zinc-500 hover:bg-surface-elevated font-medium text-sm transition-colors duration-fast ease-mechanical;
+    @apply inline-flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-sm bg-surface-bulkhead border border-rule-frame 
+    text-ink-primary hover:bg-surface-elevated hover:border-slate-400 font-medium text-sm transition-colors duration-fast ease-mechanical
+    focus:outline-none focus:ring-2 focus:ring-white/40
+    disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-danger {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-signal-breach/15 border border-signal-breach/40 
-    text-signal-breach hover:bg-signal-breach/25 font-semibold text-sm transition-all duration-normal ease-mechanical;
+    @apply inline-flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-sm bg-signal-breach/15 border border-signal-breach/50 
+    text-red-300 hover:bg-signal-breach/25 font-semibold text-sm transition-all duration-normal ease-mechanical
+    focus:outline-none focus:ring-2 focus:ring-red-400/60;
   }
   .card {
     @apply bg-surface-bulkhead border border-rule-frame rounded-md shadow-bulkhead;
   }
   .input {
-    @apply w-full bg-bg-base border border-rule-frame rounded-sm px-3 py-2 text-ink-primary text-sm 
-    placeholder:text-ink-muted/50 focus:outline-none focus:border-ink-muted transition-colors;
+    @apply w-full bg-bg-base border border-rule-frame rounded-sm px-3.5 py-2.5 min-h-[42px] text-ink-primary text-sm 
+    placeholder:text-ink-muted/70 focus:outline-none focus:border-ink-primary transition-colors;
+  }
+  .meter-bar {
+    @apply w-full h-2.5 bg-bg-base rounded-full overflow-hidden border border-rule-frame;
+  }
+  .meter-fill {
+    @apply h-full transition-all duration-300;
   }
   .badge-running {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
-    bg-emerald-500/15 text-emerald-400 border border-emerald-500/25;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-semibold 
+    bg-emerald-500/15 text-emerald-300 border border-emerald-500/35;
   }
   .badge-frozen {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-semibold 
-    bg-signal-breach/15 text-signal-breach border border-signal-breach/30;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-semibold 
+    bg-cyan-500/15 text-cyan-300 border border-cyan-500/40;
   }
   .badge-stopped {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
-    bg-ink-muted/15 text-ink-muted border border-ink-muted/20;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-medium 
+    bg-slate-700/40 text-ink-muted border border-rule-frame;
   }
   .badge-creating {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-medium 
     bg-zinc-800 text-ink-primary border border-rule-frame;
   }
   .badge-error {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-mono font-medium 
-    bg-signal-breach/20 text-signal-breach border border-signal-breach/40;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-medium 
+    bg-signal-breach/20 text-red-300 border border-signal-breach/40;
   }
 }
 
@@ -77,8 +89,8 @@
 .frozen-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(239, 68, 68, 0.08);
-  border: 2px solid rgba(239, 68, 68, 0.4);
+  background: rgba(6, 182, 212, 0.08);
+  border: 2px solid rgba(6, 182, 212, 0.4);
   border-radius: var(--radius-md);
   pointer-events: none;
   z-index: 10;
